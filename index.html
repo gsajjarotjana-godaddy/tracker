@@ -15,14 +15,18 @@
             box-sizing: border-box;
         }
 
+        * {
+            font-family: 'Andale Mono', 'AndaleMono', 'Monaco', 'Courier New', monospace !important;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Andale Mono', 'AndaleMono', 'Monaco', 'Courier New', monospace;
             background: #ffffff;
             background-attachment: fixed;
             min-height: 100vh;
             min-height: -webkit-fill-available;
             padding: 20px;
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-bottom: calc(90px + env(safe-area-inset-bottom));
             color: #333;
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
@@ -31,6 +35,7 @@
         .container {
             max-width: 800px;
             margin: 0 auto;
+            padding-top: 40px;
         }
 
         header {
@@ -47,39 +52,116 @@
 
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: white;
-            border-radius: 12px;
-            padding: 5px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            gap: 0;
+            width: 100%;
+            margin-bottom: -1px;
+            position: relative;
+            z-index: 10;
         }
 
         .tab {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: transparent;
-            border-radius: 8px;
+            position: relative;
+            padding: 12px 24px;
+            background: #f0f0f0;
+            border-radius: 20px 20px 0 0;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             transition: all 0.3s;
             color: #666;
+            border: 1px solid #ddd;
+            margin-right: -1px;
+            z-index: 1;
+            flex: 0 1 auto;
+        }
+
+        .tab:first-child {
+            margin-left: 0;
+        }
+
+        .tab:last-child {
+            margin-right: 0;
         }
 
         .tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: white;
+            color: #000000;
+            z-index: 2;
+            border: 1px solid #ddd;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .tab:not(.active) {
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab:not(.active):hover {
+            background: #e0e0e0;
+        }
+
+        .floating-add-btn {
+            position: fixed;
+            bottom: 20px;
+            right: calc(50% - 125px);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #000000;
+            border: none;
             color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            margin-bottom: env(safe-area-inset-bottom);
+        }
+
+        .floating-add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .floating-add-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 600px) {
+            .floating-add-btn {
+                right: 20px;
+            }
         }
 
         .tab-content {
             display: none;
             background: white;
-            border-radius: 12px;
+            border-radius: 0 20px 20px 20px;
             padding: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-top: 1px solid white;
+        }
+        
+        .tab-content.active {
+            border-top: 1px solid #ddd;
+            border-radius: 0 20px 20px 20px;
+        }
+        
+        /* Smooth the connection - remove bottom radius from active tab */
+        .tab.active {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        /* Ensure content box top-left is flat to connect smoothly */
+        .tab-content.active {
+            border-top-left-radius: 0;
         }
 
         .tab-content.active {
@@ -90,7 +172,7 @@
             font-size: 1.5rem;
             margin-bottom: 20px;
             color: #333;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid #000000;
             padding-bottom: 10px;
         }
 
@@ -122,7 +204,7 @@
 
         input:focus, select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #000000;
         }
 
         .btn {
@@ -140,7 +222,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #000000;
             color: white;
         }
 
@@ -246,7 +328,7 @@
         }
 
         .balance-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #000000;
             color: white;
             border-radius: 12px;
             padding: 25px;
@@ -355,6 +437,7 @@
         <div class="tabs">
             <button class="tab active" onclick="switchTab('habits')">Habits</button>
             <button class="tab" onclick="switchTab('money')">Money</button>
+            <button class="tab" onclick="switchTab('calories')">Calories</button>
         </div>
 
         <!-- Habits Tab -->
@@ -406,6 +489,37 @@
             <div id="transactions-list"></div>
         </div>
 
+        <!-- Calories Tab -->
+        <div id="calories-tab" class="tab-content">
+            <div class="balance-card" style="background: #000000;">
+                <div class="balance-label">Today's Calories</div>
+                <div class="balance-amount" id="today-calories">0</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Daily Goal</div>
+                    <div class="stat-value" id="calorie-goal">2000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Remaining</div>
+                    <div class="stat-value" id="calories-remaining" style="color: #10b981;">2000</div>
+                </div>
+            </div>
+
+            <h2 class="section-title">Add Food Entry</h2>
+            <div class="form-group">
+                <input type="text" id="food-name" placeholder="Food name (e.g., Apple, Chicken Breast)">
+            </div>
+            <div class="form-group">
+                <input type="number" id="food-calories" placeholder="Calories" step="1" min="0">
+            </div>
+            <button class="btn btn-primary" onclick="addCalorieEntry()">Add Entry</button>
+
+            <h2 class="section-title" style="margin-top: 30px;">Today's Entries</h2>
+            <div id="calories-list"></div>
+        </div>
+
         <!-- Export/Import Section -->
         <div class="export-import">
             <h2 class="section-title">Data Management</h2>
@@ -416,23 +530,32 @@
                 <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
             </div>
         </div>
+
+        <button class="floating-add-btn" onclick="handleFloatingAdd()" title="Add new item">+</button>
     </div>
 
     <script>
         // Data storage keys
         const STORAGE_KEYS = {
             HABITS: 'habits_tracker_data',
-            TRANSACTIONS: 'money_tracker_data'
+            TRANSACTIONS: 'money_tracker_data',
+            CALORIES: 'calories_tracker_data',
+            CALORIE_GOAL: 'calorie_goal_data'
         };
 
         // Initialize data structures
         let habits = [];
         let transactions = [];
+        let calorieEntries = [];
+        let calorieGoal = 2000;
+        let currentTab = 'habits';
 
         // Load data from localStorage on page load
         function loadData() {
             const habitsData = localStorage.getItem(STORAGE_KEYS.HABITS);
             const transactionsData = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
+            const caloriesData = localStorage.getItem(STORAGE_KEYS.CALORIES);
+            const goalData = localStorage.getItem(STORAGE_KEYS.CALORIE_GOAL);
 
             if (habitsData) {
                 habits = JSON.parse(habitsData);
@@ -442,8 +565,17 @@
                 transactions = JSON.parse(transactionsData);
             }
 
+            if (caloriesData) {
+                calorieEntries = JSON.parse(caloriesData);
+            }
+
+            if (goalData) {
+                calorieGoal = parseInt(goalData) || 2000;
+            }
+
             renderHabits();
             renderTransactions();
+            renderCalories();
             updateBalance();
         }
 
@@ -451,15 +583,41 @@
         function saveData() {
             localStorage.setItem(STORAGE_KEYS.HABITS, JSON.stringify(habits));
             localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
+            localStorage.setItem(STORAGE_KEYS.CALORIES, JSON.stringify(calorieEntries));
+            localStorage.setItem(STORAGE_KEYS.CALORIE_GOAL, calorieGoal.toString());
         }
 
         // Tab switching
         function switchTab(tab) {
+            currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             
             event.target.classList.add('active');
             document.getElementById(tab + '-tab').classList.add('active');
+        }
+
+        // Floating add button handler
+        function handleFloatingAdd() {
+            if (currentTab === 'habits') {
+                const nameInput = document.getElementById('habit-name');
+                if (nameInput) {
+                    nameInput.focus();
+                    nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else if (currentTab === 'money') {
+                const amountInput = document.getElementById('transaction-amount');
+                if (amountInput) {
+                    amountInput.focus();
+                    amountInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else if (currentTab === 'calories') {
+                const foodInput = document.getElementById('food-name');
+                if (foodInput) {
+                    foodInput.focus();
+                    foodInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
         }
 
         // Habit functions
@@ -699,6 +857,8 @@
             const data = {
                 habits: habits,
                 transactions: transactions,
+                calorieEntries: calorieEntries,
+                calorieGoal: calorieGoal,
                 exportDate: new Date().toISOString()
             };
 
@@ -743,6 +903,118 @@
             };
             reader.readAsText(file);
             event.target.value = ''; // Reset file input
+        }
+
+        // Calorie functions
+        function addCalorieEntry() {
+            const foodInput = document.getElementById('food-name');
+            const caloriesInput = document.getElementById('food-calories');
+            
+            const foodName = foodInput.value.trim();
+            const calories = parseInt(caloriesInput.value);
+
+            if (!foodName) {
+                alert('Please enter a food name');
+                return;
+            }
+
+            if (!calories || calories <= 0) {
+                alert('Please enter a valid calorie amount');
+                return;
+            }
+
+            const entry = {
+                id: Date.now(),
+                foodName: foodName,
+                calories: calories,
+                date: new Date().toISOString()
+            };
+
+            calorieEntries.push(entry);
+            saveData();
+            renderCalories();
+            
+            foodInput.value = '';
+            caloriesInput.value = '';
+        }
+
+        function deleteCalorieEntry(entryId) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                calorieEntries = calorieEntries.filter(e => e.id !== entryId);
+                saveData();
+                renderCalories();
+            }
+        }
+
+        function renderCalories() {
+            const container = document.getElementById('calories-list');
+            if (!container) return;
+            
+            const today = new Date().toDateString();
+            
+            // Filter today's entries
+            const todayEntries = calorieEntries.filter(e => 
+                new Date(e.date).toDateString() === today
+            );
+            
+            const totalCalories = todayEntries.reduce((sum, e) => sum + e.calories, 0);
+            const remaining = Math.max(0, calorieGoal - totalCalories);
+            
+            // Update displays
+            const todayCaloriesEl = document.getElementById('today-calories');
+            const remainingEl = document.getElementById('calories-remaining');
+            const goalEl = document.getElementById('calorie-goal');
+            
+            if (todayCaloriesEl) todayCaloriesEl.textContent = totalCalories;
+            if (remainingEl) {
+                remainingEl.textContent = remaining;
+                // Update remaining color
+                if (remaining < 0) {
+                    remainingEl.style.color = '#ef4444';
+                } else if (remaining < 500) {
+                    remainingEl.style.color = '#f59e0b';
+                } else {
+                    remainingEl.style.color = '#10b981';
+                }
+            }
+            if (goalEl) goalEl.textContent = calorieGoal;
+            
+            if (todayEntries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🍎</div>
+                        <p>No entries today. Add your first food entry above!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by date (newest first)
+            const sortedEntries = [...todayEntries].sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+
+            container.innerHTML = sortedEntries.map(entry => {
+                const date = new Date(entry.date);
+                const formattedTime = date.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit' 
+                });
+
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-amount" style="color: #333;">
+                                ${entry.calories} cal
+                            </div>
+                            <div class="transaction-details">
+                                ${entry.foodName} • ${formattedTime}
+                            </div>
+                        </div>
+                        <button class="btn btn-danger btn-small" onclick="deleteCalorieEntry(${entry.id})">Delete</button>
+                    </div>
+                `;
+            }).join('');
         }
 
         // Initialize on page load
