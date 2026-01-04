@@ -1,0 +1,58 @@
+TROUBLESHOOTING - IF IT DIDN'T WORK
+====================================
+
+CHECK THESE THINGS:
+-------------------
+
+1. Are both devices on the SAME WiFi network?
+   - Mac: System Settings → Network → check WiFi name
+   - iPhone: Settings → WiFi → check WiFi name
+   - They MUST match!
+
+2. Is the server running?
+   - Check Terminal - you should see "Serving HTTP on..."
+   - If not, double-click "start-server.sh"
+
+3. Try these URLs on your iPhone Safari:
+   - http://192.168.1.67:8000
+   - http://192.168.1.67:8000/index.html
+   - Try with "https" removed if you added it
+
+4. Check Mac Firewall:
+   - System Settings → Network → Firewall
+   - Make sure it's not blocking connections
+
+5. Try accessing from Mac first:
+   - Open Safari on your Mac
+   - Go to: http://localhost:8000
+   - If this works, the server is fine
+
+
+ALTERNATIVE SOLUTIONS:
+-----------------------
+
+SOLUTION A: Use iCloud Drive
+1. Upload index.html to iCloud Drive
+2. On iPhone Safari, go to iCloud.com
+3. Sign in and open iCloud Drive
+4. Tap index.html - it should open in Safari
+
+SOLUTION B: Use Dropbox/Google Drive
+1. Upload index.html to Dropbox or Google Drive
+2. Get a shareable link
+3. Open the link in Safari on iPhone
+4. Download and it should open
+
+SOLUTION C: Use GitHub (if you have an account)
+1. Create a new repository
+2. Upload index.html
+3. Enable GitHub Pages
+4. Access via the GitHub Pages URL
+
+SOLUTION D: Use a free hosting service
+- Netlify Drop (drag and drop)
+- Surge.sh
+- Vercel
+
+Let me know which error you're seeing and I can help more!
+

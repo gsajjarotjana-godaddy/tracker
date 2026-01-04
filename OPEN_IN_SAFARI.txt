@@ -1,0 +1,50 @@
+SAFARI ISN'T SHOWING? HERE ARE WORKAROUNDS:
+============================================
+
+METHOD 1: EMAIL IT TO YOURSELF (EASIEST)
+-----------------------------------------
+1. On your Mac, right-click index.html
+2. Choose "Share" → "Mail" (or attach to email)
+3. Email it to yourself
+4. On your iPhone, open the email
+5. Tap the HTML attachment
+6. It will open in Safari automatically!
+
+
+METHOD 2: USE SAFARI'S DOWNLOAD MANAGER
+-----------------------------------------
+1. Upload index.html to iCloud Drive (or any cloud service)
+2. On your iPhone, open Safari
+3. Go to iCloud.com and sign in
+4. Open iCloud Drive
+5. Tap the index.html file
+6. It will open in Safari!
+
+
+METHOD 3: USE A SIMPLE WEB SERVER
+----------------------------------
+1. On your Mac, open Terminal
+2. Navigate to this folder:
+   cd "/Users/grace/Desktop/development/habit tracker"
+3. Run this command:
+   python3 -m http.server 8000
+4. On your iPhone (same WiFi network):
+   Open Safari and go to: http://[YOUR-MAC-IP]:8000
+   (Find your Mac's IP: System Settings → Network)
+
+
+METHOD 4: USE THE "OPEN IN..." OPTION
+--------------------------------------
+1. In Files app, long-press index.html
+2. Look for "Open in..." or "Open with..."
+3. If you see a browser option, use that
+4. Or try "Copy" then paste the file path in Safari's address bar
+
+
+METHOD 5: USE A BOOKMARKLET (ADVANCED)
+--------------------------------------
+I can create a special bookmark you can use - just ask!
+
+
+RECOMMENDED: METHOD 1 (Email) is the easiest and most reliable!
+

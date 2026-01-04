@@ -1,0 +1,46 @@
+🚀 QUICK START - OPEN IN SAFARI NOW!
+=====================================
+
+YOUR MAC'S IP ADDRESS: 192.168.1.67
+
+FOLLOW THESE STEPS:
+-------------------
+
+1. The web server should be starting now (check Terminal)
+
+2. On your iPhone (same WiFi network):
+   - Open Safari
+   - Type this EXACT URL in the address bar:
+   
+     http://192.168.1.67:8000
+   
+   - Press Go
+   - The tracker will open! ✅
+
+3. Add to Home Screen (optional):
+   - Tap Share button in Safari
+   - Tap "Add to Home Screen"
+   - Now it's like an app!
+
+
+IF THE SERVER ISN'T RUNNING:
+-----------------------------
+Double-click "start-server.sh" or run in Terminal:
+cd "/Users/grace/Desktop/development/habit tracker"
+python3 -m http.server 8000
+
+
+YOUR DATA:
+----------
+- Saves automatically in Safari
+- Never resets
+- Works offline
+- Stays on your phone
+
+
+TROUBLESHOOTING:
+---------------
+- Make sure Mac and iPhone are on same WiFi
+- Make sure server is running (check Terminal)
+- If IP changed, run "get-ip.sh" to get new IP
+

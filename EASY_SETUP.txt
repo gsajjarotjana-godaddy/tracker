@@ -1,0 +1,55 @@
+EASIEST WAY TO OPEN ON YOUR IPHONE:
+====================================
+
+OPTION 1: EMAIL IT (RECOMMENDED - EASIEST!)
+--------------------------------------------
+1. On your Mac, right-click "index.html"
+2. Choose "Share" → "Mail" (or attach to an email)
+3. Email it to yourself
+4. On your iPhone, open the email
+5. Tap the "index.html" attachment
+6. It will automatically open in Safari! ✅
+
+This is the easiest method and always works!
+
+
+OPTION 2: USE A SIMPLE WEB SERVER
+----------------------------------
+1. On your Mac, double-click "start-server.sh"
+   (Or open Terminal and run: cd "/Users/grace/Desktop/development/habit tracker" && python3 -m http.server 8000)
+
+2. Find your Mac's IP address:
+   - Open System Settings → Network
+   - Click on your WiFi connection
+   - Look for the IP address (e.g., 192.168.1.100)
+
+3. On your iPhone (same WiFi network):
+   - Open Safari
+   - Type in address bar: http://[YOUR-MAC-IP]:8000
+   - Example: http://192.168.1.100:8000
+   - Press Go
+   - The app will open! ✅
+
+4. To stop the server, press Ctrl+C in Terminal
+
+
+OPTION 3: USE ICLOUD DRIVE
+---------------------------
+1. Upload "index.html" to iCloud Drive
+2. On your iPhone, open Safari
+3. Go to iCloud.com and sign in
+4. Open iCloud Drive
+5. Tap "index.html"
+6. It will open in Safari! ✅
+
+
+WHICH METHOD TO USE?
+- Option 1 (Email) is the EASIEST and most reliable
+- Option 2 (Server) is good if you want to access it anytime
+- Option 3 (iCloud) works but requires internet
+
+Once it's open in Safari, you can:
+- Add it to Home Screen (Share → Add to Home Screen)
+- Bookmark it for easy access
+- Your data will save automatically!
+

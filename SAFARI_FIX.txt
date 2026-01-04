@@ -1,0 +1,57 @@
+SOLUTION: USE A LOCAL WEB SERVER (WORKS 100%!)
+===============================================
+
+Since email/download doesn't open in Safari, use this method:
+
+STEP 1: START THE WEB SERVER ON YOUR MAC
+-----------------------------------------
+1. Double-click "start-server.sh" 
+   OR
+   Open Terminal and run:
+   cd "/Users/grace/Desktop/development/habit tracker"
+   python3 -m http.server 8000
+
+2. You'll see "Serving HTTP on 0.0.0.0 port 8000"
+   (Keep this Terminal window open!)
+
+
+STEP 2: GET YOUR MAC'S IP ADDRESS
+----------------------------------
+1. Double-click "get-ip.sh" to see your IP
+   OR
+   Open System Settings → Network → WiFi
+   Look for the IP address (e.g., 192.168.1.100)
+
+
+STEP 3: OPEN ON YOUR IPHONE
+----------------------------
+1. Make sure your iPhone is on the SAME WiFi network as your Mac
+2. Open Safari on your iPhone
+3. In the address bar, type:
+   http://[YOUR-MAC-IP]:8000
+   
+   Example: http://192.168.1.100:8000
+4. Press Go
+5. The tracker will open in Safari! ✅
+
+
+STEP 4: ADD TO HOME SCREEN (OPTIONAL)
+--------------------------------------
+1. Once it's open in Safari, tap the Share button
+2. Scroll down and tap "Add to Home Screen"
+3. Name it "Habit Tracker" (or whatever you want)
+4. Now you can open it like an app!
+
+
+IMPORTANT NOTES:
+- Keep the Terminal/server running while you use the app
+- Your Mac and iPhone must be on the same WiFi
+- Your data saves automatically in Safari
+- To stop the server, press Ctrl+C in Terminal
+
+
+TROUBLESHOOTING:
+- If it doesn't work, make sure both devices are on the same WiFi
+- Check that the server is running (you should see it in Terminal)
+- Try turning WiFi off and on again on your iPhone
+

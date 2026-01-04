@@ -1,0 +1,78 @@
+🚀 HOST ON GITHUB - STEP BY STEP INSTRUCTIONS
+==============================================
+
+This will give you a URL you can access from anywhere, including your iPhone!
+
+STEP 1: CREATE GITHUB REPOSITORY
+---------------------------------
+1. Go to github.com and sign in (or create account)
+2. Click the "+" icon in top right
+3. Click "New repository"
+4. Name it: "habit-tracker" (or any name you want)
+5. Make it PUBLIC (required for free GitHub Pages)
+6. DO NOT check "Initialize with README" (we already have files)
+7. Click "Create repository"
+
+
+STEP 2: PUSH YOUR CODE TO GITHUB
+---------------------------------
+Open Terminal and run these commands:
+
+cd "/Users/grace/Desktop/development/habit tracker"
+
+git remote add origin https://github.com/YOUR-USERNAME/habit-tracker.git
+(Replace YOUR-USERNAME with your actual GitHub username)
+
+git branch -M main
+
+git push -u origin main
+
+(You'll be asked to enter your GitHub username and password/token)
+
+
+STEP 3: ENABLE GITHUB PAGES
+----------------------------
+1. On GitHub, go to your repository page
+2. Click "Settings" (top menu)
+3. Scroll down to "Pages" (left sidebar)
+4. Under "Source", select "Deploy from a branch"
+5. Select branch: "main"
+6. Select folder: "/ (root)"
+7. Click "Save"
+8. Wait 1-2 minutes for it to deploy
+
+
+STEP 4: ACCESS ON YOUR IPHONE
+------------------------------
+1. Your app will be available at:
+   https://YOUR-USERNAME.github.io/habit-tracker/
+   
+   (Replace YOUR-USERNAME with your GitHub username)
+
+2. On your iPhone:
+   - Open Safari
+   - Go to that URL
+   - It will open the tracker! ✅
+
+3. Add to Home Screen:
+   - Tap Share button
+   - Tap "Add to Home Screen"
+   - Now it's like an app!
+
+
+TROUBLESHOOTING:
+---------------
+- If Pages doesn't show up, make sure repo is PUBLIC
+- Wait 2-3 minutes after enabling Pages
+- Check the URL - it should be: username.github.io/repo-name/
+- Make sure index.html is in the root of the repo
+
+
+BENEFITS:
+---------
+✅ Access from anywhere (not just same WiFi)
+✅ Works on any device
+✅ Free hosting
+✅ Easy to update (just push changes)
+✅ Professional URL
+
