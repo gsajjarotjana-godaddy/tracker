@@ -39,3 +39,4 @@ A simple, offline-capable habit and money tracking app that stores data locally 
 
 - `index.html` - Main application file (all-in-one HTML/CSS/JS)
 
+

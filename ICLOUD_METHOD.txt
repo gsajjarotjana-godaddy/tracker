@@ -46,3 +46,4 @@ IMPORTANT:
 - Once added to home screen, it works like a real app
 - Your data persists forever in Safari
 
+

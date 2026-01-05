@@ -44,3 +44,4 @@ TROUBLESHOOTING:
 - Make sure server is running (check Terminal)
 - If IP changed, run "get-ip.sh" to get new IP
 
+
