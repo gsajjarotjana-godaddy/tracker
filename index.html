@@ -44,6 +44,57 @@
             color: #333;
             margin-bottom: 30px;
             position: relative;
+            min-height: 50px;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        
+        .progress-header {
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .progress-percentage {
+            font-size: 2rem;
+            font-weight: 400;
+            color: #000;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .progress-label {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #000;
+            margin: 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: transparent;
+            position: relative;
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+        
+        .progress-segment {
+            flex: 1;
+            height: 100%;
+            background: #d3d3d3;
+            transition: background 0.3s ease;
+        }
+        
+        .progress-segment.filled {
+            background: #000;
         }
         
         .settings-btn {
@@ -171,6 +222,24 @@
             align-items: center;
             font-size: 1rem;
             color: #333;
+            gap: 10px;
+        }
+        
+        .settings-input {
+            width: 200px;
+            padding: 6px 10px;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', 'SF Mono', 'Andale Mono', 'AndaleMono', monospace;
+            font-size: 0.9rem;
+            color: #000;
+            background: white;
+            text-transform: lowercase;
+        }
+        
+        .settings-input:focus {
+            outline: none;
+            border-color: #000;
         }
         
         .toggle-switch {
@@ -226,6 +295,30 @@
         
         h1, h2, h3, h4, h5, h6 {
             font-weight: 400 !important;
+        }
+        
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding-left: 5px;
+            margin-top: -120px;
+            height: 50px;
+            line-height: 50px;
+        }
+        
+        .sparkle-icon {
+            width: 20px;
+            height: 20px;
+            stroke: #000;
+            fill: none;
+        }
+        
+        .page-title span {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: #000;
         }
 
         .tabs {
@@ -618,10 +711,14 @@
                     <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.4-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
                 </svg>
             </button>
-            <h1>📊 Habit & Money Tracker</h1>
-            <p>Track your habits and finances, all in one place</p>
         </header>
 
+        <div class="page-title">
+            <svg class="sparkle-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+            </svg>
+            <span id="user-name-display">grace's life</span>
+        </div>
         <div class="tabs">
             <button class="tab active" onclick="switchTab('habits')">Habits</button>
             <button class="tab" onclick="switchTab('money')">Money</button>
@@ -630,6 +727,13 @@
 
         <!-- Habits Tab -->
         <div id="habits-tab" class="tab-content active">
+            <div class="progress-bar-container">
+                <div class="progress-header">
+                    <div class="progress-percentage" id="progress-percentage">0%</div>
+                    <div class="progress-label">habits completed today</div>
+                </div>
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
             <h2 class="section-title">Add New Habit</h2>
             <div class="form-group">
                 <input type="text" id="habit-name" placeholder="Enter habit name (e.g., Exercise, Read, Meditate)">
@@ -722,6 +826,12 @@
         </button>
         <div class="settings-header">
             <h2 class="settings-title">Settings</h2>
+        </div>
+        <div class="settings-item">
+            <label class="settings-label">
+                <span>name</span>
+                <input type="text" id="user-name-input" class="settings-input" placeholder="enter your name" onchange="updateUserName()" onblur="updateUserName()">
+            </label>
         </div>
         <div class="settings-item">
             <label class="settings-label">
@@ -873,6 +983,7 @@
             habits.push(habit);
             saveData();
             renderHabits();
+            updateProgressArch();
             nameInput.value = '';
         }
 
@@ -894,6 +1005,7 @@
             updateHabitStreak(habit);
             saveData();
             renderHabits();
+            updateProgressArch();
         }
 
         function updateHabitStreak(habit) {
@@ -978,6 +1090,41 @@
                     </div>
                 `;
             }).join('');
+            
+            updateProgressArch();
+        }
+
+        function updateProgressArch() {
+            const today = new Date().toDateString();
+            const totalHabits = habits.length;
+            const progressBar = document.getElementById('progress-bar');
+            
+            if (totalHabits === 0) {
+                document.getElementById('progress-percentage').textContent = '0%';
+                progressBar.innerHTML = '';
+                return;
+            }
+            
+            const completedToday = habits.filter(habit => 
+                habit.completions.some(c => new Date(c).toDateString() === today)
+            ).length;
+            
+            const percentage = Math.round((completedToday / totalHabits) * 100);
+            document.getElementById('progress-percentage').textContent = percentage + '%';
+            
+            // Create 40 segments
+            const totalSegments = 40;
+            const filledSegments = Math.round((percentage / 100) * totalSegments);
+            
+            progressBar.innerHTML = '';
+            for (let i = 0; i < totalSegments; i++) {
+                const segment = document.createElement('div');
+                segment.className = 'progress-segment';
+                if (i < filledSegments) {
+                    segment.classList.add('filled');
+                }
+                progressBar.appendChild(segment);
+            }
         }
 
         // Money functions
@@ -1327,10 +1474,30 @@
             }
         }
 
+        function loadUserName() {
+            const userName = localStorage.getItem('userName') || 'grace';
+            document.getElementById('user-name-display').textContent = userName + "'s life";
+            const nameInput = document.getElementById('user-name-input');
+            if (nameInput) {
+                nameInput.value = userName;
+            }
+        }
+        
+        function updateUserName() {
+            const nameInput = document.getElementById('user-name-input');
+            const userName = nameInput.value.trim().toLowerCase() || 'grace';
+            localStorage.setItem('userName', userName);
+            document.getElementById('user-name-display').textContent = userName + "'s life";
+        }
+
         // Initialize on page load
         loadData();
         loadMoneyTabPreference();
         loadCaloriesTabPreference();
+        loadUserName();
+        setTimeout(() => {
+            updateProgressArch();
+        }, 100);
     </script>
 </body>
 </html>
