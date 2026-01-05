@@ -517,28 +517,78 @@
         }
 
         .habit-item, .transaction-item {
-            background: #f8f9fa;
+            background: transparent;
+            border: 1px solid #000;
             border-radius: 8px;
-            padding: 15px;
+            padding: 12px 15px 20px 15px;
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: transform 0.2s;
+            position: relative;
+            min-height: 50px;
         }
-
-        .habit-item:hover, .transaction-item:hover {
-            transform: translateX(5px);
+        
+        .habit-item.completed {
+            background: #000;
+            border: 1px solid #000;
+        }
+        
+        .habit-item.completed .habit-name {
+            color: white;
+        }
+        
+        .habit-item.completed .streak {
+            color: white;
+        }
+        
+        .habit-item.completed .delete-btn-icon svg {
+            stroke: white;
+        }
+        
+        .delete-btn-icon {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+        }
+        
+        .delete-btn-icon:hover {
+            opacity: 1;
         }
 
         .habit-info {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .habit-name {
             font-weight: 400;
             font-size: 1.1rem;
             margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .sparkle-icon-small {
+            width: 14px;
+            height: 14px;
+            stroke: #000;
+            fill: none;
+        }
+        
+        .habit-item.completed .sparkle-icon-small {
+            stroke: white;
         }
 
         .habit-stats {
@@ -547,8 +597,9 @@
         }
 
         .streak {
-            color: #10b981;
+            color: #000;
             font-weight: 400;
+            text-transform: uppercase;
         }
 
         .check-btn {
@@ -570,6 +621,32 @@
         .check-btn.checked {
             background: #10b981;
             color: white;
+        }
+        
+        .check-btn-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid #000;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        .check-btn-circle.checked {
+            background: #000;
+            border-color: white;
+        }
+        
+        .check-btn-circle svg {
+            stroke: #000;
+        }
+        
+        .check-btn-circle.checked svg {
+            stroke: white;
         }
 
         .transaction-info {
@@ -1071,21 +1148,25 @@
                 const totalCompletions = habit.completions.length;
 
                 return `
-                    <div class="habit-item">
+                    <div class="habit-item ${isCompletedToday ? 'completed' : ''}">
                         <div class="habit-info">
-                            <div class="habit-name">${habit.name}</div>
+                            <div class="habit-name">
+                                <svg class="sparkle-icon-small" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+                                </svg>
+                                ${habit.name}
+                            </div>
                             <div class="habit-stats">
-                                <span class="streak">🔥 ${habit.currentStreak} day streak</span> • 
-                                <span>Best: ${habit.longestStreak} days</span> • 
-                                <span>Total: ${totalCompletions} times</span>
+                                <span class="streak">STREAK: ${habit.currentStreak}</span>
                             </div>
                         </div>
-                        <div>
-                            <button class="check-btn ${isCompletedToday ? 'checked' : ''}" 
-                                    onclick="toggleHabitCompletion(${habit.id})">
-                                ${isCompletedToday ? '✓ Done' : 'Mark Done'}
+                        <div style="display: flex; align-items: center; gap: 10px; margin-left: auto; margin-top: -35px;">
+                            <button class="check-btn-circle ${isCompletedToday ? 'checked' : ''}" 
+                                    onclick="toggleHabitCompletion(${habit.id})" title="${isCompletedToday ? 'Done' : 'Mark Done'}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
                             </button>
-                            <button class="btn btn-danger btn-small" onclick="deleteHabit(${habit.id})">Delete</button>
                         </div>
                     </div>
                 `;
@@ -1489,6 +1570,30 @@
             localStorage.setItem('userName', userName);
             document.getElementById('user-name-display').textContent = userName + "'s life";
         }
+
+        // Check for date changes and refresh display to sync with device time
+        let lastKnownDate = new Date().toDateString();
+        
+        function checkDateChange() {
+            const currentDate = new Date().toDateString();
+            if (currentDate !== lastKnownDate) {
+                lastKnownDate = currentDate;
+                // Date changed, refresh all displays
+                renderHabits();
+                renderCalories();
+                updateProgressArch();
+            }
+        }
+        
+        // Check for date changes every minute
+        setInterval(checkDateChange, 60000);
+        
+        // Also check when the page becomes visible (user returns to app)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkDateChange();
+            }
+        });
 
         // Initialize on page load
         loadData();
