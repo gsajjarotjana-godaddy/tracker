@@ -89,7 +89,7 @@
         .progress-segment {
             flex: 1;
             height: 100%;
-            background: #d3d3d3;
+            background: #f0f0f0;
             transition: background 0.3s ease;
         }
         
@@ -437,12 +437,51 @@
         }
 
         .section-title {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             margin-bottom: 20px;
             color: #333;
             border-bottom: 2px solid #000000;
             padding-bottom: 10px;
             font-weight: 400;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .arrow-icon-section {
+            width: 16px;
+            height: 16px;
+            stroke: #000;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .view-toggle-btn {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border: 1px solid #000;
+            background: transparent;
+            color: #000;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 400;
+        }
+        
+        .view-toggle-btn.active {
+            background: #000;
+            color: white;
+        }
+        
+        .view-toggle-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .view-toggle-btn.active:hover {
+            background: #000;
         }
 
         .form-group {
@@ -584,11 +623,70 @@
             width: 14px;
             height: 14px;
             stroke: #000;
-            fill: none;
+            fill: #000;
         }
         
         .habit-item.completed .sparkle-icon-small {
             stroke: white;
+            fill: white;
+        }
+        
+        .habit-info-monthly {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .habit-name-monthly {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 400;
+            font-size: 0.75rem;
+        }
+        
+        .habit-name-monthly .sparkle-icon-small {
+            width: 10px;
+            height: 10px;
+        }
+        
+        .month-percentage {
+            font-weight: 400;
+            font-size: 0.75rem;
+            position: absolute;
+            top: 12px;
+            right: 15px;
+        }
+        
+        .habit-item.monthly-view {
+            position: relative;
+            min-height: 50px;
+            padding: 12px 15px 12px 15px;
+        }
+        
+        .habit-info-monthly {
+            margin-bottom: 6px;
+        }
+        
+        .month-dots-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            grid-auto-rows: 1fr;
+            gap: 6px;
+            width: 100%;
+            margin-top: 0;
+        }
+        
+        .month-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            aspect-ratio: 1;
+        }
+        
+        .month-dot.filled {
+            background: #000;
         }
 
         .habit-stats {
@@ -817,7 +915,17 @@
             </div>
             <button class="btn btn-primary" onclick="addHabit()">Add Habit</button>
 
-            <h2 class="section-title" style="margin-top: 30px;">Your Habits</h2>
+            <h2 class="section-title" style="margin-top: 30px; border-bottom: none; padding-bottom: 0;">
+                <svg class="arrow-icon-section" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+                habits
+                <div class="view-toggle" style="margin-left: auto;">
+                    <button class="view-toggle-btn active" id="daily-view" onclick="switchView('daily')">daily</button>
+                    <button class="view-toggle-btn" id="monthly-view" onclick="switchView('monthly')">monthly</button>
+                </div>
+            </h2>
             <div id="habits-list"></div>
         </div>
 
@@ -967,6 +1075,7 @@
         let calorieEntries = [];
         let calorieGoal = 2000;
         let currentTab = 'habits';
+        let currentView = 'daily';
 
         // Load data from localStorage on page load
         function loadData() {
@@ -1003,6 +1112,15 @@
             localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
             localStorage.setItem(STORAGE_KEYS.CALORIES, JSON.stringify(calorieEntries));
             localStorage.setItem(STORAGE_KEYS.CALORIE_GOAL, calorieGoal.toString());
+        }
+
+        // View switching (daily/monthly)
+        function switchView(view) {
+            currentView = view;
+            document.getElementById('daily-view').classList.toggle('active', view === 'daily');
+            document.getElementById('monthly-view').classList.toggle('active', view === 'monthly');
+            renderHabits();
+            updateProgressArch();
         }
 
         // Tab switching
@@ -1142,35 +1260,79 @@
                 return;
             }
 
-            container.innerHTML = habits.map(habit => {
-                const today = new Date().toDateString();
-                const isCompletedToday = habit.completions.some(c => new Date(c).toDateString() === today);
-                const totalCompletions = habit.completions.length;
+            if (currentView === 'monthly') {
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                
+                container.innerHTML = habits.map(habit => {
+                    // Count completions for this month
+                    const monthCompletions = habit.completions.filter(c => {
+                        const date = new Date(c);
+                        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+                    });
+                    
+                    const completedDays = monthCompletions.map(c => new Date(c).getDate());
+                    const percentage = Math.round((completedDays.length / daysInMonth) * 100);
+                    
+                    // Create dots grid (3 rows)
+                    const dotsPerRow = Math.ceil(daysInMonth / 3);
+                    let dotsHTML = '';
+                    
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const isCompleted = completedDays.includes(day);
+                        dotsHTML += `<div class="month-dot ${isCompleted ? 'filled' : ''}"></div>`;
+                    }
+                    
+                    return `
+                        <div class="habit-item monthly-view">
+                            <div class="month-percentage">${percentage}%</div>
+                            <div class="habit-info-monthly">
+                                <div class="habit-name-monthly">
+                                    <svg class="sparkle-icon-small" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+                                    </svg>
+                                    ${habit.name}
+                                </div>
+                            </div>
+                            <div class="month-dots-grid">
+                                ${dotsHTML}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = habits.map(habit => {
+                    const today = new Date().toDateString();
+                    const isCompletedToday = habit.completions.some(c => new Date(c).toDateString() === today);
+                    const totalCompletions = habit.completions.length;
 
-                return `
-                    <div class="habit-item ${isCompletedToday ? 'completed' : ''}">
-                        <div class="habit-info">
-                            <div class="habit-name">
-                                <svg class="sparkle-icon-small" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
-                                </svg>
-                                ${habit.name}
+                    return `
+                        <div class="habit-item ${isCompletedToday ? 'completed' : ''}">
+                            <div class="habit-info">
+                                <div class="habit-name">
+                                    <svg class="sparkle-icon-small" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+                                    </svg>
+                                    ${habit.name}
+                                </div>
+                                <div class="habit-stats">
+                                    <span class="streak">STREAK: ${habit.currentStreak}</span>
+                                </div>
                             </div>
-                            <div class="habit-stats">
-                                <span class="streak">STREAK: ${habit.currentStreak}</span>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-left: auto; margin-top: -35px;">
+                                <button class="check-btn-circle ${isCompletedToday ? 'checked' : ''}" 
+                                        onclick="toggleHabitCompletion(${habit.id})" title="${isCompletedToday ? 'Done' : 'Mark Done'}">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 10px; margin-left: auto; margin-top: -35px;">
-                            <button class="check-btn-circle ${isCompletedToday ? 'checked' : ''}" 
-                                    onclick="toggleHabitCompletion(${habit.id})" title="${isCompletedToday ? 'Done' : 'Mark Done'}">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            }
             
             updateProgressArch();
         }
