@@ -124,6 +124,47 @@
             transform: rotate(90deg);
         }
         
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay.open {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-input {
+            border: 1px solid #e8e8e8 !important;
+        }
+        
+        .modal-content .btn {
+            font-size: 0.85rem;
+        }
+        
+        .modal-content .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
         .settings-sidebar {
             position: fixed;
             top: 0;
@@ -909,11 +950,6 @@
                 </div>
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
-            <h2 class="section-title">Add New Habit</h2>
-            <div class="form-group">
-                <input type="text" id="habit-name" placeholder="Enter habit name (e.g., Exercise, Read, Meditate)">
-            </div>
-            <button class="btn btn-primary" onclick="addHabit()">Add Habit</button>
 
             <h2 class="section-title" style="margin-top: 30px; border-bottom: none; padding-bottom: 0;">
                 <svg class="arrow-icon-section" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -999,6 +1035,25 @@
 
 
         <button class="floating-add-btn" onclick="handleFloatingAdd()" title="Add new item">+</button>
+    </div>
+
+    <!-- Add Habit Modal -->
+    <div class="modal-overlay" id="add-habit-modal" onclick="closeAddHabitModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 class="section-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 20px;">
+                <svg class="sparkle-icon-small" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+                </svg>
+                Add New Habit
+            </h2>
+            <div class="form-group">
+                <input type="text" id="habit-name" placeholder="enter habit name" class="modal-input">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeAddHabitModal()" style="flex: 1;">Cancel</button>
+                <button class="btn btn-primary" onclick="addHabit()" style="flex: 1;">Add Habit</button>
+            </div>
+        </div>
     </div>
 
     <!-- Settings Sidebar -->
@@ -1136,11 +1191,7 @@
         // Floating add button handler
         function handleFloatingAdd() {
             if (currentTab === 'habits') {
-                const nameInput = document.getElementById('habit-name');
-                if (nameInput) {
-                    nameInput.focus();
-                    nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                openAddHabitModal();
             } else if (currentTab === 'money') {
                 const amountInput = document.getElementById('transaction-amount');
                 if (amountInput) {
@@ -1152,6 +1203,33 @@
                 if (foodInput) {
                     foodInput.focus();
                     foodInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        function openAddHabitModal() {
+            const modal = document.getElementById('add-habit-modal');
+            if (modal) {
+                modal.classList.add('open');
+                const nameInput = document.getElementById('habit-name');
+                if (nameInput) {
+                    setTimeout(() => {
+                        nameInput.focus();
+                    }, 100);
+                }
+            }
+        }
+        
+        function closeAddHabitModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('add-habit-modal');
+            if (modal) {
+                modal.classList.remove('open');
+                const nameInput = document.getElementById('habit-name');
+                if (nameInput) {
+                    nameInput.value = '';
                 }
             }
         }
@@ -1180,6 +1258,8 @@
             renderHabits();
             updateProgressArch();
             nameInput.value = '';
+            // Close the modal after adding
+            closeAddHabitModal();
         }
 
         function toggleHabitCompletion(habitId) {
