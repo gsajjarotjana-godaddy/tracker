@@ -165,6 +165,39 @@
             gap: 8px;
         }
         
+        .celebration-modal-content {
+            text-align: center;
+            padding: 25px 20px;
+            max-width: 280px;
+        }
+        
+        .celebration-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 15px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            animation: slowSpin 3s linear infinite;
+        }
+        
+        @keyframes slowSpin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .celebration-text {
+            font-size: 0.9rem;
+            color: #000;
+            margin-bottom: 0;
+            line-height: 1.5;
+            text-transform: lowercase;
+        }
+        
         .settings-sidebar {
             position: fixed;
             top: 0;
@@ -815,8 +848,8 @@
             background: #000000;
             color: white;
             border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
+            padding: 20px 25px;
+            margin-bottom: 10px;
             text-align: center;
         }
 
@@ -839,7 +872,8 @@
         }
 
         .stat-card {
-            background: #f8f9fa;
+            background: transparent;
+            border: 1px solid #000;
             border-radius: 8px;
             padding: 15px;
             text-align: center;
@@ -847,8 +881,8 @@
 
         .stat-label {
             font-size: 0.875rem;
-            color: #666;
-            margin-bottom: 5px;
+            color: #000;
+            margin-bottom: 10px;
         }
 
         .stat-value {
@@ -917,6 +951,21 @@
                 flex-direction: column;
             }
         }
+        
+        @keyframes confettiFall {
+            0% {
+                opacity: 1;
+                transform: translateY(-10px) translateX(0) rotate(0deg);
+            }
+            70% {
+                opacity: 1;
+                transform: translateY(calc(70vh)) translateX(var(--drift)) rotate(var(--rotation));
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100vh) translateX(var(--drift)) rotate(var(--rotation));
+            }
+        }
     </style>
 </head>
 <body>
@@ -936,9 +985,9 @@
             <span id="user-name-display">grace's life</span>
         </div>
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('habits')">Habits</button>
-            <button class="tab" onclick="switchTab('money')">Money</button>
-            <button class="tab" onclick="switchTab('calories')">Calories</button>
+            <button class="tab active" onclick="switchTab('habits', this)">Habits</button>
+            <button class="tab" onclick="switchTab('money', this)">Money</button>
+            <button class="tab" onclick="switchTab('calories', this)">Calories</button>
         </div>
 
         <!-- Habits Tab -->
@@ -963,6 +1012,25 @@
                 </div>
             </h2>
             <div id="habits-list"></div>
+        </div>
+
+        <!-- Habit Detail View -->
+        <div id="habit-detail-tab" class="tab-content" style="display: none;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <button class="back-btn" onclick="closeHabitDetail()" style="background: transparent; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <button class="delete-habit-btn" onclick="deleteHabitFromDetail()" style="background: transparent; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="habit-detail-content"></div>
         </div>
 
         <!-- Money Tab -->
@@ -1005,32 +1073,49 @@
         <!-- Calories Tab -->
         <div id="calories-tab" class="tab-content">
             <div class="balance-card" style="background: #000000;">
-                <div class="balance-label">Today's Calories</div>
-                <div class="balance-amount" id="today-calories">0</div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Daily Goal</div>
-                    <div class="stat-value" id="calorie-goal">2000</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Remaining</div>
-                    <div class="stat-value" id="calories-remaining" style="color: #10b981;">2000</div>
+                <div class="balance-label">calories available today</div>
+                <div class="balance-amount" id="daily-calories-available" style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+                    </svg>
+                    <span>0</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+                    </svg>
                 </div>
             </div>
 
-            <h2 class="section-title">Add Food Entry</h2>
-            <div class="form-group">
-                <input type="text" id="food-name" placeholder="Food name (e.g., Apple, Chicken Breast)">
+            <div class="stat-card" style="margin-top: 0px; display: flex; align-items: center; justify-content: space-around; padding: 20px 15px;">
+                <div style="flex: 1; text-align: center;">
+                    <div class="stat-label">used today</div>
+                    <div class="stat-value" id="calories-used-today">0</div>
+                </div>
+                <div style="width: 1px; height: 70px; background: #000; margin: 0 15px;"></div>
+                <div style="flex: 1; text-align: center; position: relative;">
+                    <div class="stat-label">weekly goal</div>
+                    <div class="stat-value" id="weekly-calorie-goal-display" style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                        <span>14000</span>
+                        <button onclick="openSetWeeklyGoalModal()" style="background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <input type="number" id="food-calories" placeholder="Calories" step="1" min="0">
-            </div>
-            <button class="btn btn-primary" onclick="addCalorieEntry()">Add Entry</button>
 
-            <h2 class="section-title" style="margin-top: 30px;">Today's Entries</h2>
-            <div id="calories-list"></div>
+            <div style="display: flex; align-items: center; margin-top: 30px;">
+                <h2 class="section-title" style="border-bottom: none; padding-bottom: 0; margin: 0; flex: 1;" id="calorie-view-title">weekly log</h2>
+                <button class="view-toggle-btn" id="calorie-view-toggle" onclick="toggleCalorieView()" style="margin-left: auto; display: none;"></button>
+            </div>
+            <div id="weekly-log-content" style="display: block; margin-top: 20px;">
+                <div id="weekly-log"></div>
+                <button class="btn btn-secondary" onclick="saveCurrentWeek()" style="margin-top: 15px; width: 100%;">save week</button>
+            </div>
+            <div id="saved-weeks-content" style="display: none; margin-top: 20px;">
+                <div id="saved-weeks-list"></div>
+            </div>
         </div>
 
 
@@ -1052,6 +1137,81 @@
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn btn-secondary" onclick="closeAddHabitModal()" style="flex: 1;">Cancel</button>
                 <button class="btn btn-primary" onclick="addHabit()" style="flex: 1;">Add Habit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div class="modal-overlay" id="celebration-modal" onclick="closeCelebrationModal(event)">
+        <div class="modal-content celebration-modal-content" onclick="event.stopPropagation()">
+            <img src="smiley.png" alt="celebration" class="celebration-icon">
+            <p class="celebration-text">good job! you're getting<br>1% better each day.</p>
+            <button class="btn btn-primary" onclick="closeCelebrationModal()" style="margin-top: 20px;">yay</button>
+        </div>
+    </div>
+
+    <!-- Delete Habit Confirmation Modal -->
+    <div class="modal-overlay" id="delete-habit-modal" onclick="closeDeleteHabitModal(event)">
+        <div class="modal-content celebration-modal-content" onclick="event.stopPropagation()">
+            <svg class="celebration-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; animation: none;">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <p class="celebration-text">are you sure you want to<br>delete this habit?</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
+                <button class="btn btn-secondary" onclick="closeDeleteHabitModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="confirmDeleteHabit()" style="flex: 1;">delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Week Modal -->
+    <div class="modal-overlay" id="save-week-modal" onclick="closeSaveWeekModal(event)">
+        <div class="modal-content celebration-modal-content" onclick="event.stopPropagation()">
+            <p class="celebration-text">name this week</p>
+            <input type="text" id="week-name-input" placeholder="week name" class="modal-input" style="margin-top: 15px; width: 100%;">
+            <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
+                <button class="btn btn-secondary" onclick="closeSaveWeekModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="confirmSaveWeek()" style="flex: 1;">save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Saved Week Confirmation Modal -->
+    <div class="modal-overlay" id="delete-saved-week-modal" onclick="closeDeleteSavedWeekModal(event)">
+        <div class="modal-content celebration-modal-content" onclick="event.stopPropagation()">
+            <svg class="celebration-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; animation: none;">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <p class="celebration-text">are you sure you want to<br>delete this saved week?</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
+                <button class="btn btn-secondary" onclick="closeDeleteSavedWeekModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="confirmDeleteSavedWeek()" style="flex: 1;">delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Set Weekly Goal Modal -->
+    <div class="modal-overlay" id="set-weekly-goal-modal" onclick="closeSetWeeklyGoalModal(event)">
+        <div class="modal-content celebration-modal-content" onclick="event.stopPropagation()">
+            <p class="celebration-text">set weekly calories</p>
+            <input type="number" id="weekly-calorie-goal-input" placeholder="weekly calories" step="100" min="0" class="modal-input" style="margin-top: 15px; width: 100%;" onkeypress="if(event.key==='Enter') setWeeklyGoal()">
+            <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
+                <button class="btn btn-secondary" onclick="closeSetWeeklyGoalModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="setWeeklyGoal()" style="flex: 1;">set goal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Calorie Entry Modal -->
+    <div class="modal-overlay" id="add-calorie-modal" onclick="closeAddCalorieModal(event)">
+        <div class="modal-content celebration-modal-content" onclick="event.stopPropagation()">
+            <p class="celebration-text">enter calories for the day!</p>
+            <input type="number" id="food-calories-modal" placeholder="enter calories" step="1" min="0" class="modal-input" style="margin-top: 15px; width: 100%;" onkeypress="if(event.key==='Enter') addCalorieEntry()">
+            <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
+                <button class="btn btn-secondary" onclick="closeAddCalorieModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="addCalorieEntry()" style="flex: 1;">add</button>
             </div>
         </div>
     </div>
@@ -1121,7 +1281,9 @@
             HABITS: 'habits_tracker_data',
             TRANSACTIONS: 'money_tracker_data',
             CALORIES: 'calories_tracker_data',
-            CALORIE_GOAL: 'calorie_goal_data'
+            CALORIE_GOAL: 'calorie_goal_data',
+            WEEKLY_CALORIES: 'weekly_calories_data',
+            SAVED_WEEKS: 'saved_weeks_data'
         };
 
         // Initialize data structures
@@ -1129,8 +1291,14 @@
         let transactions = [];
         let calorieEntries = [];
         let calorieGoal = 2000;
+        let weeklyCalorieGoal = 14000; // Default: 2000 * 7
+        let savedWeeks = [];
         let currentTab = 'habits';
         let currentView = 'daily';
+        let currentCalorieView = 'weekly';
+        let currentHabitId = null;
+        let habitToDeleteId = null;
+        let savedWeekToDeleteIndex = null;
 
         // Load data from localStorage on page load
         function loadData() {
@@ -1154,6 +1322,16 @@
             if (goalData) {
                 calorieGoal = parseInt(goalData) || 2000;
             }
+            
+            const weeklyGoalData = localStorage.getItem(STORAGE_KEYS.WEEKLY_CALORIES);
+            if (weeklyGoalData) {
+                weeklyCalorieGoal = parseInt(weeklyGoalData) || 14000;
+            }
+            
+            const savedWeeksData = localStorage.getItem(STORAGE_KEYS.SAVED_WEEKS);
+            if (savedWeeksData) {
+                savedWeeks = JSON.parse(savedWeeksData);
+            }
 
             renderHabits();
             renderTransactions();
@@ -1167,6 +1345,8 @@
             localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
             localStorage.setItem(STORAGE_KEYS.CALORIES, JSON.stringify(calorieEntries));
             localStorage.setItem(STORAGE_KEYS.CALORIE_GOAL, calorieGoal.toString());
+            localStorage.setItem(STORAGE_KEYS.WEEKLY_CALORIES, weeklyCalorieGoal.toString());
+            localStorage.setItem(STORAGE_KEYS.SAVED_WEEKS, JSON.stringify(savedWeeks));
         }
 
         // View switching (daily/monthly)
@@ -1179,13 +1359,44 @@
         }
 
         // Tab switching
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        function switchTab(tab, clickedElement) {
+            // Close habit detail view if open
+            if (currentHabitId) {
+                closeHabitDetail();
+            }
             
-            event.target.classList.add('active');
-            document.getElementById(tab + '-tab').classList.add('active');
+            currentTab = tab;
+            
+            // Remove active class from all tabs and hide all tab contents
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => {
+                t.classList.remove('active');
+                t.style.display = 'none';
+            });
+            
+            // Find and activate the correct tab button
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(btn => {
+                if (btn.textContent.trim().toLowerCase() === tab.toLowerCase() || 
+                    (tab === 'habits' && btn === tabButtons[0]) ||
+                    (tab === 'money' && btn === tabButtons[1]) ||
+                    (tab === 'calories' && btn === tabButtons[2])) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Show only the correct tab content
+            const tabContent = document.getElementById(tab + '-tab');
+            if (tabContent) {
+                tabContent.classList.add('active');
+                tabContent.style.display = 'block';
+            }
+            
+            // Hide habit detail tab if it's visible
+            const habitDetailTab = document.getElementById('habit-detail-tab');
+            if (habitDetailTab) {
+                habitDetailTab.style.display = 'none';
+            }
         }
 
         // Floating add button handler
@@ -1199,10 +1410,33 @@
                     amountInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             } else if (currentTab === 'calories') {
-                const foodInput = document.getElementById('food-name');
-                if (foodInput) {
-                    foodInput.focus();
-                    foodInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                openAddCalorieModal();
+            }
+        }
+        
+        function openAddCalorieModal() {
+            const modal = document.getElementById('add-calorie-modal');
+            if (modal) {
+                modal.classList.add('open');
+                const caloriesInput = document.getElementById('food-calories-modal');
+                if (caloriesInput) {
+                    setTimeout(() => {
+                        caloriesInput.focus();
+                    }, 100);
+                }
+            }
+        }
+        
+        function closeAddCalorieModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('add-calorie-modal');
+            if (modal) {
+                modal.classList.remove('open');
+                const caloriesInput = document.getElementById('food-calories-modal');
+                if (caloriesInput) {
+                    caloriesInput.value = '';
                 }
             }
         }
@@ -1281,6 +1515,9 @@
             saveData();
             renderHabits();
             updateProgressArch();
+            if (currentHabitId === habitId) {
+                renderHabitDetail();
+            }
         }
 
         function updateHabitStreak(habit) {
@@ -1320,11 +1557,113 @@
         }
 
         function deleteHabit(habitId) {
-            if (confirm('Are you sure you want to delete this habit?')) {
+            habitToDeleteId = habitId;
+            const modal = document.getElementById('delete-habit-modal');
+            if (modal) {
+                modal.classList.add('open');
+            }
+        }
+        
+        function confirmDeleteHabit() {
+            if (habitToDeleteId) {
+                const habitId = habitToDeleteId;
                 habits = habits.filter(h => h.id !== habitId);
                 saveData();
                 renderHabits();
+                if (currentHabitId === habitId) {
+                    closeHabitDetail();
+                }
+                closeDeleteHabitModal();
             }
+        }
+        
+        function closeDeleteHabitModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('delete-habit-modal');
+            if (modal) {
+                modal.classList.remove('open');
+            }
+            habitToDeleteId = null;
+        }
+        
+        function openHabitDetail(habitId) {
+            currentHabitId = habitId;
+            document.getElementById('habits-tab').style.display = 'none';
+            document.getElementById('habit-detail-tab').style.display = 'block';
+            renderHabitDetail();
+        }
+        
+        function closeHabitDetail() {
+            currentHabitId = null;
+            document.getElementById('habits-tab').style.display = 'block';
+            document.getElementById('habit-detail-tab').style.display = 'none';
+        }
+        
+        function deleteHabitFromDetail() {
+            if (currentHabitId) {
+                deleteHabit(currentHabitId);
+            }
+        }
+        
+        function renderHabitDetail() {
+            if (!currentHabitId) return;
+            
+            const habit = habits.find(h => h.id === currentHabitId);
+            if (!habit) {
+                closeHabitDetail();
+                return;
+            }
+            
+            const container = document.getElementById('habit-detail-content');
+            
+            // Get current year
+            const currentYear = new Date().getFullYear();
+            const startOfYear = new Date(currentYear, 0, 1);
+            const endOfYear = new Date(currentYear, 11, 31);
+            const daysInYear = Math.ceil((endOfYear - startOfYear) / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Get all completions for this year
+            const yearCompletions = habit.completions.filter(c => {
+                const date = new Date(c);
+                return date.getFullYear() === currentYear;
+            });
+            
+            // Create a set of completed day numbers (1-365)
+            const completedDays = new Set();
+            yearCompletions.forEach(c => {
+                const date = new Date(c);
+                const dayOfYear = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24)) + 1;
+                completedDays.add(dayOfYear);
+            });
+            
+            const percentage = Math.round((completedDays.size / daysInYear) * 100);
+            
+            // Create dots grid for the year (15 columns like monthly view)
+            const columns = 15;
+            const rows = Math.ceil(daysInYear / columns);
+            let dotsHTML = '';
+            
+            for (let day = 1; day <= daysInYear; day++) {
+                const isCompleted = completedDays.has(day);
+                dotsHTML += `<div class="month-dot ${isCompleted ? 'filled' : ''}"></div>`;
+            }
+            
+            container.innerHTML = `
+                <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem;">
+                        <svg class="sparkle-icon-small" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px;">
+                            <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+                        </svg>
+                        ${habit.name}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #000;">${percentage}%</div>
+                </div>
+                <div class="month-dots-grid" style="grid-template-columns: repeat(15, 1fr);">
+                    ${dotsHTML}
+                </div>
+            `;
         }
 
         function renderHabits() {
@@ -1366,7 +1705,7 @@
                     }
                     
                     return `
-                        <div class="habit-item monthly-view">
+                        <div class="habit-item monthly-view" onclick="openHabitDetail(${habit.id})" style="cursor: pointer;">
                             <div class="month-percentage">${percentage}%</div>
                             <div class="habit-info-monthly">
                                 <div class="habit-name-monthly">
@@ -1448,8 +1787,96 @@
                 }
                 progressBar.appendChild(segment);
             }
+            
+            // Check if all habits are completed and trigger celebration
+            if (percentage === 100 && totalHabits > 0) {
+                triggerCelebration();
+            }
         }
-
+        
+        let celebrationTriggered = false;
+        let lastCelebrationDate = null;
+        
+        function triggerCelebration() {
+            const today = new Date().toDateString();
+            
+            // Only trigger once per day
+            if (celebrationTriggered && lastCelebrationDate === today) {
+                return;
+            }
+            
+            // Remove any existing celebration
+            const existingCelebration = document.getElementById('celebration-container');
+            if (existingCelebration) {
+                existingCelebration.remove();
+            }
+            
+            // Mark celebration as triggered for today
+            celebrationTriggered = true;
+            lastCelebrationDate = today;
+            
+            // Create celebration container
+            const celebration = document.createElement('div');
+            celebration.id = 'celebration-container';
+            celebration.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5000; overflow: hidden;';
+            document.body.appendChild(celebration);
+            
+            // Create confetti pieces
+            const colors = ['#000', '#000', '#000'];
+            const confettiCount = 50;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                const isRectangle = Math.random() > 0.3; // 70% rectangles, 30% circles
+                const width = isRectangle ? (4 + Math.random() * 8) : (6 + Math.random() * 6);
+                const height = isRectangle ? (8 + Math.random() * 12) : width;
+                const startX = Math.random() * 100;
+                const drift = (Math.random() - 0.5) * 200; // Horizontal drift
+                const rotation = Math.random() * 720; // 0-720 degrees
+                const duration = 2 + Math.random() * 1.5; // 2-3.5 seconds
+                const delay = Math.random() * 0.5;
+                
+                confetti.style.cssText = `
+                    position: absolute;
+                    width: ${width}px;
+                    height: ${height}px;
+                    background: ${colors[Math.floor(Math.random() * colors.length)]};
+                    border-radius: ${isRectangle ? '2px' : '50%'};
+                    left: ${startX}%;
+                    top: -20px;
+                    opacity: 1;
+                    --drift: ${drift}px;
+                    --rotation: ${rotation}deg;
+                    animation: confettiFall ${duration}s linear forwards;
+                    animation-delay: ${delay}s;
+                `;
+                celebration.appendChild(confetti);
+            }
+            
+            // Show celebration modal
+            const celebrationModal = document.getElementById('celebration-modal');
+            if (celebrationModal) {
+                celebrationModal.classList.add('open');
+            }
+            
+            // Remove celebration after animation
+            setTimeout(() => {
+                if (celebration.parentNode) {
+                    celebration.remove();
+                }
+            }, 5000);
+        }
+        
+        function closeCelebrationModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('celebration-modal');
+            if (modal) {
+                modal.classList.remove('open');
+            }
+        }
+        
         // Money functions
         function addTransaction() {
             const type = document.getElementById('transaction-type').value;
@@ -1606,18 +2033,155 @@
             event.target.value = ''; // Reset file input
         }
 
-        // Calorie functions
-        function addCalorieEntry() {
-            const foodInput = document.getElementById('food-name');
-            const caloriesInput = document.getElementById('food-calories');
+        // Helper function to get Monday of current week (12 AM)
+        function getWeekStart(date = new Date()) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            const monday = new Date(d.setDate(diff));
+            monday.setHours(0, 0, 0, 0);
+            return monday;
+        }
+        
+        // Helper function to get day of week (0 = Monday, 6 = Sunday)
+        function getDayOfWeek(date = new Date()) {
+            const d = new Date(date);
+            const day = d.getDay();
+            return day === 0 ? 6 : day - 1; // Convert Sunday (0) to 6, others shift by 1
+        }
+        
+        // Calculate daily calories available with rollover logic
+        function calculateDailyCaloriesAvailable() {
+            const today = new Date();
+            const weekStart = getWeekStart(today);
+            const dayOfWeek = getDayOfWeek(today);
             
-            const foodName = foodInput.value.trim();
-            const calories = parseInt(caloriesInput.value);
-
-            if (!foodName) {
-                alert('Please enter a food name');
+            // Get all entries for this week
+            const weekEntries = calorieEntries.filter(e => {
+                const entryDate = new Date(e.date);
+                return entryDate >= weekStart && entryDate < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+            });
+            
+            // Calculate calories used per day
+            const dailyUsed = [0, 0, 0, 0, 0, 0, 0];
+            weekEntries.forEach(entry => {
+                const entryDate = new Date(entry.date);
+                const entryDay = getDayOfWeek(entryDate);
+                dailyUsed[entryDay] += entry.calories;
+            });
+            
+            // Base daily budget
+            const baseDailyBudget = Math.floor(weeklyCalorieGoal / 7);
+            
+            // Calculate available calories for each day with rollover
+            const dailyAvailable = [];
+            let remainingFromPrevious = 0;
+            
+            for (let i = 0; i <= dayOfWeek; i++) {
+                let available = baseDailyBudget + remainingFromPrevious;
+                const used = dailyUsed[i];
+                remainingFromPrevious = available - used;
+                
+                // If we're on today, return the available amount
+                if (i === dayOfWeek) {
+                    return Math.max(0, remainingFromPrevious);
+                }
+            }
+            
+            return Math.max(0, baseDailyBudget);
+        }
+        
+        // Get calories used today
+        function getCaloriesUsedToday() {
+            const today = new Date();
+            const todayStart = new Date(today);
+            todayStart.setHours(0, 0, 0, 0);
+            const todayEnd = new Date(today);
+            todayEnd.setHours(23, 59, 59, 999);
+            
+            const todayEntries = calorieEntries.filter(e => {
+                const entryDate = new Date(e.date);
+                return entryDate >= todayStart && entryDate <= todayEnd;
+            });
+            
+            return todayEntries.reduce((sum, e) => sum + e.calories, 0);
+        }
+        
+        // Get weekly log data
+        function getWeeklyLog() {
+            const today = new Date();
+            const weekStart = getWeekStart(today);
+            const dayOfWeek = getDayOfWeek(today);
+            
+            // Get all entries for this week
+            const weekEntries = calorieEntries.filter(e => {
+                const entryDate = new Date(e.date);
+                return entryDate >= weekStart && entryDate < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+            });
+            
+            // Calculate calories used per day
+            const dailyUsed = [0, 0, 0, 0, 0, 0, 0];
+            weekEntries.forEach(entry => {
+                const entryDate = new Date(entry.date);
+                const entryDay = getDayOfWeek(entryDate);
+                dailyUsed[entryDay] += entry.calories;
+            });
+            
+            const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            return dayNames.map((name, index) => ({
+                name: name,
+                calories: dailyUsed[index],
+                isToday: index === dayOfWeek
+            }));
+        }
+        
+        // Calorie functions
+        function openSetWeeklyGoalModal() {
+            const modal = document.getElementById('set-weekly-goal-modal');
+            if (modal) {
+                modal.classList.add('open');
+                const input = document.getElementById('weekly-calorie-goal-input');
+                if (input) {
+                    input.value = weeklyCalorieGoal || '';
+                    setTimeout(() => {
+                        input.focus();
+                        input.select();
+                    }, 100);
+                }
+            }
+        }
+        
+        function closeSetWeeklyGoalModal(event) {
+            if (event && event.target !== event.currentTarget) {
                 return;
             }
+            const modal = document.getElementById('set-weekly-goal-modal');
+            if (modal) {
+                modal.classList.remove('open');
+                const input = document.getElementById('weekly-calorie-goal-input');
+                if (input) {
+                    input.value = '';
+                }
+            }
+        }
+        
+        function setWeeklyGoal() {
+            const input = document.getElementById('weekly-calorie-goal-input');
+            const goal = parseInt(input.value);
+            if (goal && goal > 0) {
+                weeklyCalorieGoal = goal;
+                saveData();
+                renderCalories();
+                closeSetWeeklyGoalModal();
+            } else {
+                alert('Please enter a valid calorie amount');
+            }
+        }
+        
+        function addCalorieEntry() {
+            // Try modal input first, then fall back to tab input
+            const caloriesInput = document.getElementById('food-calories-modal') || document.getElementById('food-calories');
+            const calories = parseInt(caloriesInput.value);
 
             if (!calories || calories <= 0) {
                 alert('Please enter a valid calorie amount');
@@ -1626,7 +2190,6 @@
 
             const entry = {
                 id: Date.now(),
-                foodName: foodName,
                 calories: calories,
                 date: new Date().toISOString()
             };
@@ -1634,9 +2197,13 @@
             calorieEntries.push(entry);
             saveData();
             renderCalories();
-            
-            foodInput.value = '';
             caloriesInput.value = '';
+            
+            // Close modal if it was opened from modal
+            const modal = document.getElementById('add-calorie-modal');
+            if (modal && modal.classList.contains('open')) {
+                closeAddCalorieModal();
+            }
         }
 
         function deleteCalorieEntry(entryId) {
@@ -1646,76 +2213,215 @@
                 renderCalories();
             }
         }
-
+        
         function renderCalories() {
-            const container = document.getElementById('calories-list');
-            if (!container) return;
-            
-            const today = new Date().toDateString();
-            
-            // Filter today's entries
-            const todayEntries = calorieEntries.filter(e => 
-                new Date(e.date).toDateString() === today
-            );
-            
-            const totalCalories = todayEntries.reduce((sum, e) => sum + e.calories, 0);
-            const remaining = Math.max(0, calorieGoal - totalCalories);
+            const caloriesUsedToday = getCaloriesUsedToday();
+            const dailyAvailable = calculateDailyCaloriesAvailable();
             
             // Update displays
-            const todayCaloriesEl = document.getElementById('today-calories');
-            const remainingEl = document.getElementById('calories-remaining');
-            const goalEl = document.getElementById('calorie-goal');
+            const dailyAvailableEl = document.getElementById('daily-calories-available');
+            const usedTodayEl = document.getElementById('calories-used-today');
+            const weeklyGoalEl = document.getElementById('weekly-calorie-goal-display');
             
-            if (todayCaloriesEl) todayCaloriesEl.textContent = totalCalories;
-            if (remainingEl) {
-                remainingEl.textContent = remaining;
-                // Update remaining color
-                if (remaining < 0) {
-                    remainingEl.style.color = '#ef4444';
-                } else if (remaining < 500) {
-                    remainingEl.style.color = '#f59e0b';
+            if (dailyAvailableEl) {
+                const span = dailyAvailableEl.querySelector('span');
+                if (span) {
+                    span.textContent = dailyAvailable;
                 } else {
-                    remainingEl.style.color = '#10b981';
+                    dailyAvailableEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/></svg><span>${dailyAvailable}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/></svg>`;
                 }
             }
-            if (goalEl) goalEl.textContent = calorieGoal;
+            if (usedTodayEl) usedTodayEl.textContent = caloriesUsedToday;
+            if (weeklyGoalEl) {
+                const span = weeklyGoalEl.querySelector('span');
+                if (span) {
+                    span.textContent = weeklyCalorieGoal;
+                } else {
+                    weeklyGoalEl.innerHTML = `<span>${weeklyCalorieGoal}</span><button onclick="openSetWeeklyGoalModal()" style="background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>`;
+                }
+            }
             
-            if (todayEntries.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🍎</div>
-                        <p>No entries today. Add your first food entry above!</p>
-                    </div>
-                `;
+            // Render based on active view
+            if (currentCalorieView === 'weekly') {
+                renderWeeklyLog();
+            } else {
+                renderSavedWeeks();
+            }
+        }
+        
+        function toggleCalorieView() {
+            currentCalorieView = currentCalorieView === 'weekly' ? 'saved' : 'weekly';
+            updateCalorieViewDisplay();
+            renderCalories();
+        }
+        
+        function updateCalorieViewDisplay() {
+            const title = document.getElementById('calorie-view-title');
+            const toggleBtn = document.getElementById('calorie-view-toggle');
+            const weeklyContent = document.getElementById('weekly-log-content');
+            const savedContent = document.getElementById('saved-weeks-content');
+            
+            if (currentCalorieView === 'weekly') {
+                if (title) title.textContent = 'weekly log';
+                if (toggleBtn) {
+                    toggleBtn.textContent = 'saved';
+                    toggleBtn.style.display = 'block';
+                }
+                if (weeklyContent) weeklyContent.style.display = 'block';
+                if (savedContent) savedContent.style.display = 'none';
+            } else {
+                if (title) title.textContent = 'saved';
+                if (toggleBtn) {
+                    toggleBtn.textContent = 'weekly log';
+                    toggleBtn.style.display = 'block';
+                }
+                if (weeklyContent) weeklyContent.style.display = 'none';
+                if (savedContent) savedContent.style.display = 'block';
+            }
+        }
+        
+        function renderWeeklyLog() {
+            const container = document.getElementById('weekly-log');
+            if (!container) return;
+            
+            const weeklyLog = getWeeklyLog();
+            container.innerHTML = weeklyLog.map(day => `
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e8e8e8; ${day.isToday ? 'font-weight: 400;' : ''}">
+                    <span>${day.name}:</span>
+                    <span>${day.calories}</span>
+                </div>
+            `).join('');
+        }
+        
+        function renderSavedWeeks() {
+            const container = document.getElementById('saved-weeks-list');
+            if (!container) return;
+            
+            if (savedWeeks.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>no saved weeks yet</p></div>';
                 return;
             }
-
-            // Sort by date (newest first)
-            const sortedEntries = [...todayEntries].sort((a, b) => 
-                new Date(b.date) - new Date(a.date)
-            );
-
-            container.innerHTML = sortedEntries.map(entry => {
-                const date = new Date(entry.date);
-                const formattedTime = date.toLocaleTimeString('en-US', { 
-                    hour: 'numeric', 
-                    minute: '2-digit' 
-                });
-
-                return `
-                    <div class="transaction-item">
-                        <div class="transaction-info">
-                            <div class="transaction-amount" style="color: #333;">
-                                ${entry.calories} cal
-                            </div>
-                            <div class="transaction-details">
-                                ${entry.foodName} • ${formattedTime}
-                            </div>
-                        </div>
-                        <button class="btn btn-danger btn-small" onclick="deleteCalorieEntry(${entry.id})">Delete</button>
+            
+            container.innerHTML = savedWeeks.map((week, index) => `
+                <div style="padding: 10px; margin-bottom: 10px; border: 1px solid #e8e8e8; border-radius: 8px; cursor: pointer;" onclick="viewSavedWeek(${index})">
+                    ${week.name}
+                </div>
+            `).join('');
+        }
+        
+        function saveCurrentWeek() {
+            const modal = document.getElementById('save-week-modal');
+            if (modal) {
+                modal.classList.add('open');
+                const nameInput = document.getElementById('week-name-input');
+                if (nameInput) {
+                    setTimeout(() => {
+                        nameInput.focus();
+                    }, 100);
+                }
+            }
+        }
+        
+        function confirmSaveWeek() {
+            const nameInput = document.getElementById('week-name-input');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert('Please enter a week name');
+                return;
+            }
+            
+            const weekStart = getWeekStart();
+            const weekEntries = calorieEntries.filter(e => {
+                const entryDate = new Date(e.date);
+                return entryDate >= weekStart && entryDate < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+            });
+            
+            const weeklyLog = getWeeklyLog();
+            
+            savedWeeks.push({
+                name: name,
+                weekStart: weekStart.toISOString(),
+                dailyCalories: weeklyLog.map(d => d.calories),
+                savedAt: new Date().toISOString()
+            });
+            
+            saveData();
+            renderCalories();
+            closeSaveWeekModal();
+        }
+        
+        function closeSaveWeekModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('save-week-modal');
+            if (modal) {
+                modal.classList.remove('open');
+                const nameInput = document.getElementById('week-name-input');
+                if (nameInput) {
+                    nameInput.value = '';
+                }
+            }
+        }
+        
+        function viewSavedWeek(index) {
+            const week = savedWeeks[index];
+            if (!week) return;
+            
+            const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const weekHTML = dayNames.map((name, i) => `
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e8e8e8;">
+                    <span>${name}:</span>
+                    <span>${week.dailyCalories[i] || 0}</span>
+                </div>
+            `).join('');
+            
+            const container = document.getElementById('saved-weeks-list');
+            if (container) {
+                container.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #000;">
+                        <h3 class="section-title" style="margin: 0; flex: 1; border-bottom: none; padding-bottom: 0;">${week.name}</h3>
+                        <button onclick="openDeleteSavedWeekModal(${index}); event.stopPropagation();" style="background: none; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
                     </div>
+                    ${weekHTML}
+                    <button class="btn btn-secondary" onclick="renderCalories()" style="margin-top: 15px; width: 100%;">back</button>
                 `;
-            }).join('');
+            }
+        }
+        
+        function openDeleteSavedWeekModal(index) {
+            savedWeekToDeleteIndex = index;
+            const modal = document.getElementById('delete-saved-week-modal');
+            if (modal) {
+                modal.classList.add('open');
+            }
+        }
+        
+        function confirmDeleteSavedWeek() {
+            if (savedWeekToDeleteIndex !== null) {
+                const index = savedWeekToDeleteIndex;
+                savedWeeks.splice(index, 1);
+                saveData();
+                renderCalories();
+                closeDeleteSavedWeekModal();
+            }
+        }
+        
+        function closeDeleteSavedWeekModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('delete-saved-week-modal');
+            if (modal) {
+                modal.classList.remove('open');
+            }
+            savedWeekToDeleteIndex = null;
         }
 
         // Settings function
@@ -1743,8 +2449,10 @@
                 if (moneyContent) moneyContent.style.display = 'none';
                 // If money tab was active, switch to habits
                 if (currentTab === 'money') {
-                    switchTab('habits');
-                    document.querySelector('.tab:first-child').click();
+                    const habitsTab = document.querySelector('.tab:first-child');
+                    if (habitsTab) {
+                        switchTab('habits', habitsTab);
+                    }
                 }
             }
             
@@ -1764,8 +2472,10 @@
                 if (caloriesContent) caloriesContent.style.display = 'none';
                 // If calories tab was active, switch to habits
                 if (currentTab === 'calories') {
-                    switchTab('habits');
-                    document.querySelector('.tab:first-child').click();
+                    const habitsTab = document.querySelector('.tab:first-child');
+                    if (habitsTab) {
+                        switchTab('habits', habitsTab);
+                    }
                 }
             }
             
@@ -1820,6 +2530,10 @@
             const currentDate = new Date().toDateString();
             if (currentDate !== lastKnownDate) {
                 lastKnownDate = currentDate;
+                // Reset celebration flag for new day
+                if (lastCelebrationDate !== currentDate) {
+                    celebrationTriggered = false;
+                }
                 // Date changed, refresh all displays
                 renderHabits();
                 renderCalories();
@@ -1842,6 +2556,17 @@
         loadMoneyTabPreference();
         loadCaloriesTabPreference();
         loadUserName();
+        
+        // Ensure only the active tab is visible on initial load
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            if (!tab.classList.contains('active')) {
+                tab.style.display = 'none';
+            }
+        });
+        
+        // Initialize calorie view
+        updateCalorieViewDisplay();
+        
         setTimeout(() => {
             updateProgressArch();
         }, 100);
