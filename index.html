@@ -1672,8 +1672,7 @@
             if (habits.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">📝</div>
-                        <p>No habits yet. Add your first habit above!</p>
+                        <p>no habits yet</p>
                     </div>
                 `;
                 return;
@@ -1761,22 +1760,27 @@
             const totalHabits = habits.length;
             const progressBar = document.getElementById('progress-bar');
             
+            // Create 40 segments (always show, even with no habits)
+            const totalSegments = 40;
+            let filledSegments = 0;
+            let percentage = 0;
+            
             if (totalHabits === 0) {
                 document.getElementById('progress-percentage').textContent = '0%';
-                progressBar.innerHTML = '';
-                return;
+            } else {
+                const completedToday = habits.filter(habit => 
+                    habit.completions.some(c => new Date(c).toDateString() === today)
+                ).length;
+                
+                percentage = Math.round((completedToday / totalHabits) * 100);
+                document.getElementById('progress-percentage').textContent = percentage + '%';
+                filledSegments = Math.round((percentage / 100) * totalSegments);
+                
+                // Check if all habits are completed and trigger celebration
+                if (percentage === 100 && totalHabits > 0) {
+                    triggerCelebration();
+                }
             }
-            
-            const completedToday = habits.filter(habit => 
-                habit.completions.some(c => new Date(c).toDateString() === today)
-            ).length;
-            
-            const percentage = Math.round((completedToday / totalHabits) * 100);
-            document.getElementById('progress-percentage').textContent = percentage + '%';
-            
-            // Create 40 segments
-            const totalSegments = 40;
-            const filledSegments = Math.round((percentage / 100) * totalSegments);
             
             progressBar.innerHTML = '';
             for (let i = 0; i < totalSegments; i++) {
@@ -1786,11 +1790,6 @@
                     segment.classList.add('filled');
                 }
                 progressBar.appendChild(segment);
-            }
-            
-            // Check if all habits are completed and trigger celebration
-            if (percentage === 100 && totalHabits > 0) {
-                triggerCelebration();
             }
         }
         
@@ -1944,8 +1943,7 @@
             if (transactions.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">💰</div>
-                        <p>No transactions yet. Add your first transaction above!</p>
+                        <p>no transactions yet</p>
                     </div>
                 `;
                 return;
