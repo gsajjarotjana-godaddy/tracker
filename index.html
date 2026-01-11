@@ -3579,15 +3579,16 @@
                 return 0;
             };
             
-            // Function to measure actual button position when on money/calories tabs
+            // Function to measure actual button position when on habits tab (where it's currently correct)
             const measureCorrectPosition = () => {
-                if (currentTab === 'money' || currentTab === 'calories') {
+                if (currentTab === 'habits') {
                     // Wait for viewport to settle (especially important in app mode)
                     setTimeout(() => {
-                        // Use visualViewport if available (more accurate in app mode)
-                        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                        // getBoundingClientRect() is always relative to window.innerHeight
+                        // So we must use window.innerHeight for the calculation
                         const rect = floatingBtn.getBoundingClientRect();
-                        const bottomDistance = viewportHeight - rect.bottom;
+                        // Calculate distance from bottom of viewport to bottom of button
+                        const bottomDistance = window.innerHeight - rect.bottom;
                         
                         // Only save if we got a reasonable value (15-100px range)
                         if (bottomDistance >= 15 && bottomDistance <= 100) {
@@ -3595,10 +3596,10 @@
                             // Save to localStorage with app mode flag
                             localStorage.setItem(STORAGE_KEY, bottomDistance.toString());
                             localStorage.setItem(STORAGE_KEY + '_isApp', isStandalone ? 'true' : 'false');
-                            // Apply immediately
+                            // Apply immediately to all tabs
                             applyMeasuredPosition();
                         }
-                    }, 300); // Longer delay to ensure viewport has settled
+                    }, 500); // Longer delay to ensure viewport has fully settled in app mode
                 }
             };
             
@@ -3608,7 +3609,7 @@
                     // Check if saved value was from same mode (app vs browser)
                     const savedIsApp = localStorage.getItem(STORAGE_KEY + '_isApp') === 'true';
                     if (savedIsApp === isStandalone) {
-                        // Use saved value if from same mode
+                        // Use saved value if from same mode - apply with cssText to override everything
                         floatingBtn.style.cssText = `
                             position: fixed !important;
                             bottom: ${measuredBottomValue}px !important;
@@ -3633,6 +3634,10 @@
                             transition: transform 0.3s !important;
                             transform: translateZ(0) !important;
                         `;
+                        // Also set via setProperty as backup
+                        floatingBtn.style.setProperty('bottom', `${measuredBottomValue}px`, 'important');
+                        floatingBtn.style.setProperty('right', '20px', 'important');
+                        floatingBtn.style.setProperty('position', 'fixed', 'important');
                     } else {
                         // Recalculate if mode changed
                         measuredBottomValue = null;
@@ -3669,8 +3674,8 @@
             
             // Wait for viewport to fully settle (important in app mode)
             setTimeout(() => {
-                // Try to measure position if on money/calories tab on load
-                if (currentTab === 'money' || currentTab === 'calories') {
+                // Try to measure position if on habits tab on load (where it's correct)
+                if (currentTab === 'habits') {
                     measureCorrectPosition();
                 }
                 // Apply position after viewport settles
@@ -3694,16 +3699,23 @@
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
+                    // Apply position BEFORE switching (to prevent flash)
                     applyMeasuredPosition();
                     const result = originalSwitchTab.apply(this, args);
-                    // Try to measure position if on money/calories (to update saved value)
-                    measureCorrectPosition();
-                    // Apply position after switch
+                    // Apply position immediately after switch - critical for habits tab
                     applyMeasuredPosition();
+                    // Try to measure position if on habits tab (to update saved value)
+                    setTimeout(() => {
+                        measureCorrectPosition();
+                        applyMeasuredPosition();
+                    }, 100);
+                    // Apply position multiple times to ensure it sticks (especially for habits tab)
                     setTimeout(applyMeasuredPosition, 0);
                     setTimeout(applyMeasuredPosition, 50);
                     setTimeout(applyMeasuredPosition, 100);
-                    setTimeout(applyMeasuredPosition, 200);
+                    setTimeout(applyMeasuredPosition, 150);
+                    setTimeout(applyMeasuredPosition, 250);
+                    setTimeout(applyMeasuredPosition, 400);
                     return result;
                 };
             }
@@ -3713,8 +3725,8 @@
                 window.visualViewport.addEventListener('resize', () => {
                     setTimeout(() => {
                         applyMeasuredPosition();
-                        // Re-measure if on correct tab
-                        if (currentTab === 'money' || currentTab === 'calories') {
+                        // Re-measure if on habits tab (where position is correct)
+                        if (currentTab === 'habits') {
                             measureCorrectPosition();
                         }
                     }, 100);
