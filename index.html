@@ -3547,58 +3547,49 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Lock button position to match calories/money tabs exactly
+        // Lock button position to match money tab exactly
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
-            // Store the correct position from calories/money tabs
-            let correctBottomPosition = null;
-            let correctRightPosition = null;
-            let positionCaptured = false;
+            // Store the correct position from money tab
+            let correctBottomValue = null;
+            let correctRightValue = null;
             
-            // Function to capture the correct position from calories/money tabs
-            const captureCorrectPosition = () => {
-                if (currentTab === 'calories' || currentTab === 'money') {
-                    // Wait a bit for layout to settle
+            // Function to capture the exact position from money tab
+            const captureMoneyTabPosition = () => {
+                if (currentTab === 'money') {
+                    // Wait for layout to fully settle
                     setTimeout(() => {
-                        const computed = window.getComputedStyle(floatingBtn);
-                        const bottom = computed.bottom;
-                        const right = computed.right;
+                        const rect = floatingBtn.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const bottomDistance = viewportHeight - rect.bottom;
+                        const rightDistance = window.innerWidth - rect.right;
                         
-                        // Only capture if we have valid pixel values
-                        if (bottom && bottom !== 'auto' && right && right !== 'auto') {
-                            // Convert to pixels if needed
-                            const bottomPx = parseFloat(bottom) || parseFloat(bottom.replace('px', ''));
-                            const rightPx = right.includes('calc') ? right : (parseFloat(right) || parseFloat(right.replace('px', '')));
-                            
-                            if (bottomPx || right.includes('calc')) {
-                                correctBottomPosition = bottom;
-                                correctRightPosition = right;
-                                positionCaptured = true;
-                            }
-                        }
-                    }, 100);
+                        // Store the exact pixel values
+                        correctBottomValue = bottomDistance;
+                        correctRightValue = rightDistance;
+                    }, 150);
                 }
             };
             
-            // Function to apply the captured position
-            const applyCorrectPosition = () => {
-                if (positionCaptured && correctBottomPosition && correctRightPosition) {
-                    floatingBtn.style.setProperty('bottom', correctBottomPosition, 'important');
-                    floatingBtn.style.setProperty('right', correctRightPosition, 'important');
+            // Function to apply the captured position to all tabs
+            const applyMoneyTabPosition = () => {
+                if (correctBottomValue !== null && correctRightValue !== null) {
+                    // Apply the exact position from money tab
+                    floatingBtn.style.setProperty('bottom', `${correctBottomValue}px`, 'important');
+                    floatingBtn.style.setProperty('right', `${correctRightValue}px`, 'important');
                     floatingBtn.style.setProperty('position', 'fixed', 'important');
+                } else if (currentTab === 'money' || currentTab === 'calories') {
+                    // On money/calories tabs, let CSS handle it and capture the position
+                    captureMoneyTabPosition();
                 } else {
-                    // Fallback: use CSS calc (20px base)
-                    const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
-                    const bottomValue = 20 + safeAreaBottom;
-                    const rightValue = window.innerWidth <= 600 ? '20px' : 'calc(50% - 125px)';
-                    floatingBtn.style.setProperty('bottom', `${bottomValue}px`, 'important');
-                    floatingBtn.style.setProperty('right', rightValue, 'important');
-                    floatingBtn.style.setProperty('position', 'fixed', 'important');
+                    // On habits tab, if we have captured position, use it
+                    if (correctBottomValue !== null && correctRightValue !== null) {
+                        floatingBtn.style.setProperty('bottom', `${correctBottomValue}px`, 'important');
+                        floatingBtn.style.setProperty('right', `${correctRightValue}px`, 'important');
+                        floatingBtn.style.setProperty('position', 'fixed', 'important');
+                    }
                 }
             };
-            
-            // Try to capture position immediately if on calories/money tab
-            captureCorrectPosition();
             
             // Override switchTab to capture and apply position
             const originalSwitchTab = window.switchTab;
@@ -3606,38 +3597,46 @@
                 window.switchTab = function(...args) {
                     const result = originalSwitchTab.apply(this, args);
                     
-                    // Try to capture position if on calories/money tab
-                    captureCorrectPosition();
+                    // Capture position if on money tab
+                    if (currentTab === 'money') {
+                        setTimeout(captureMoneyTabPosition, 50);
+                        setTimeout(captureMoneyTabPosition, 150);
+                        setTimeout(captureMoneyTabPosition, 300);
+                    }
                     
                     // Apply position after switching
-                    setTimeout(applyCorrectPosition, 0);
-                    setTimeout(applyCorrectPosition, 10);
-                    setTimeout(applyCorrectPosition, 50);
-                    setTimeout(applyCorrectPosition, 100);
-                    setTimeout(applyCorrectPosition, 200);
-                    setTimeout(applyCorrectPosition, 500);
+                    setTimeout(applyMoneyTabPosition, 0);
+                    setTimeout(applyMoneyTabPosition, 10);
+                    setTimeout(applyMoneyTabPosition, 50);
+                    setTimeout(applyMoneyTabPosition, 100);
+                    setTimeout(applyMoneyTabPosition, 200);
+                    setTimeout(applyMoneyTabPosition, 500);
                     
                     return result;
                 };
             }
             
-            // Apply position immediately and continuously
-            applyCorrectPosition();
-            setTimeout(applyCorrectPosition, 50);
-            setTimeout(applyCorrectPosition, 100);
-            setTimeout(applyCorrectPosition, 200);
-            setTimeout(applyCorrectPosition, 500);
+            // Initial capture and apply
+            if (currentTab === 'money') {
+                captureMoneyTabPosition();
+            }
+            applyMoneyTabPosition();
             
-            // Continuously apply position
+            // Continuously apply position, especially on habits tab
             setInterval(() => {
-                applyCorrectPosition();
-                captureCorrectPosition();
-            }, 300);
+                if (currentTab === 'habits') {
+                    applyMoneyTabPosition();
+                } else if (currentTab === 'money') {
+                    captureMoneyTabPosition();
+                }
+            }, 200);
             
             // Lock on resize
             window.addEventListener('resize', () => {
-                captureCorrectPosition();
-                applyCorrectPosition();
+                if (currentTab === 'money') {
+                    captureMoneyTabPosition();
+                }
+                applyMoneyTabPosition();
             });
         }
         
