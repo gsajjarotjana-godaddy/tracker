@@ -453,32 +453,28 @@
         }
 
         .floating-add-btn {
-            position: fixed;
-            bottom: 20px;
-            right: calc(50% - 125px);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #000000;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            line-height: 1;
-            cursor: pointer;
-            z-index: 1001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.3s;
-            transform: translateZ(0);
-            margin: 0;
-            padding: 0;
-        }
-        
-        @media (max-width: 600px) {
-            .floating-add-btn {
-                right: 20px;
-            }
+            position: fixed !important;
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+            right: 20px !important;
+            width: 50px !important;
+            height: 50px !important;
+            border-radius: 50% !important;
+            background: #000000 !important;
+            border: none !important;
+            color: white !important;
+            font-size: 1.5rem !important;
+            line-height: 1 !important;
+            cursor: pointer !important;
+            z-index: 1001 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: transform 0.3s !important;
+            transform: translateZ(0) !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            top: auto !important;
+            left: auto !important;
         }
 
         .floating-add-btn:hover {
@@ -3547,143 +3543,40 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Lock button position to match money tab exactly
+        // Ensure button is always 20px from bottom right corner on all tabs
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
-            // Store the correct position from money tab
-            let correctBottomValue = null;
-            let correctRightValue = null;
-            let positionLocked = false;
-            
-            // Function to capture the exact position from money tab
-            const captureMoneyTabPosition = () => {
-                if (currentTab === 'money' || currentTab === 'calories') {
-                    // Capture at multiple intervals to ensure we get the settled position
-                    [100, 200, 300, 500, 800].forEach(delay => {
-                        setTimeout(() => {
-                            const rect = floatingBtn.getBoundingClientRect();
-                            const viewportHeight = window.innerHeight;
-                            const bottomDistance = viewportHeight - rect.bottom;
-                            const rightDistance = window.innerWidth - rect.right;
-                            
-                            // Only update if we got valid values and it's a reasonable position
-                            if (bottomDistance > 0 && bottomDistance < 200 && rightDistance >= 0) {
-                                correctBottomValue = bottomDistance;
-                                correctRightValue = rightDistance;
-                                positionLocked = true;
-                            }
-                        }, delay);
-                    });
-                }
+            const setButtonPosition = () => {
+                // Get safe area bottom
+                const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
+                const bottomValue = 20 + safeAreaBottom;
+                
+                // Always set to 20px from bottom right
+                floatingBtn.style.setProperty('bottom', `${bottomValue}px`, 'important');
+                floatingBtn.style.setProperty('right', '20px', 'important');
+                floatingBtn.style.setProperty('position', 'fixed', 'important');
             };
             
-            // Function to force apply the captured position
-            const forceApplyPosition = () => {
-                if (positionLocked && correctBottomValue !== null && correctRightValue !== null) {
-                    // On habits tab, add an offset to match money tab position (make it lower)
-                    let bottomToUse = correctBottomValue;
-                    if (currentTab === 'habits') {
-                        // Add offset to move button down to match money tab
-                        // The button appears higher on habits tab, so we need to increase bottom value
-                        bottomToUse = correctBottomValue + 10; // Add 10px to move it down
-                    }
-                    
-                    // Apply the position with !important
-                    floatingBtn.style.cssText = `
-                        position: fixed !important;
-                        bottom: ${bottomToUse}px !important;
-                        right: ${correctRightValue}px !important;
-                        top: auto !important;
-                        left: auto !important;
-                        width: 50px !important;
-                        height: 50px !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        border-radius: 50% !important;
-                        background: #000000 !important;
-                        border: none !important;
-                        color: white !important;
-                        font-size: 1.5rem !important;
-                        line-height: 1 !important;
-                        cursor: pointer !important;
-                        z-index: 1001 !important;
-                        display: flex !important;
-                        align-items: center !important;
-                        justify-content: center !important;
-                        transition: transform 0.3s !important;
-                        transform: translateZ(0) !important;
-                    `;
-                } else if (currentTab === 'money' || currentTab === 'calories') {
-                    // On money/calories, capture position but don't override CSS
-                    captureMoneyTabPosition();
-                }
-            };
+            // Set position immediately
+            setButtonPosition();
             
-            // Override switchTab to capture and force apply position
+            // Set position when switching tabs
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
                     const result = originalSwitchTab.apply(this, args);
-                    
-                    // Capture if on money/calories
-                    if (currentTab === 'money' || currentTab === 'calories') {
-                        captureMoneyTabPosition();
-                    }
-                    
-                    // Force apply position after switch (especially on habits tab)
-                    if (currentTab === 'habits' && positionLocked) {
-                        forceApplyPosition();
-                    }
-                    
-                    // Force apply at many intervals
-                    [0, 1, 5, 10, 20, 50, 100, 200, 300, 500].forEach(delay => {
-                        setTimeout(() => {
-                            if (currentTab === 'habits' && positionLocked) {
-                                forceApplyPosition();
-                            }
-                        }, delay);
-                    });
-                    
+                    setButtonPosition();
+                    setTimeout(setButtonPosition, 10);
+                    setTimeout(setButtonPosition, 50);
                     return result;
                 };
             }
             
-            // Initial setup
-            if (currentTab === 'money' || currentTab === 'calories') {
-                captureMoneyTabPosition();
-            }
+            // Set on resize
+            window.addEventListener('resize', setButtonPosition);
             
-            // Use requestAnimationFrame to continuously lock position on habits tab
-            const lockPosition = () => {
-                if (currentTab === 'habits' && positionLocked) {
-                    // On habits tab, continuously force the exact position
-                    forceApplyPosition();
-                } else if (currentTab === 'money' || currentTab === 'calories') {
-                    // On money/calories, capture position
-                    captureMoneyTabPosition();
-                }
-                requestAnimationFrame(lockPosition);
-            };
-            requestAnimationFrame(lockPosition);
-            
-            // Also use setInterval as backup
-            setInterval(() => {
-                if (currentTab === 'habits' && positionLocked) {
-                    forceApplyPosition();
-                } else if (currentTab === 'money' || currentTab === 'calories') {
-                    captureMoneyTabPosition();
-                }
-            }, 16);
-            
-            // Lock on resize
-            window.addEventListener('resize', () => {
-                if (currentTab === 'money' || currentTab === 'calories') {
-                    captureMoneyTabPosition();
-                }
-                if (currentTab === 'habits' && positionLocked) {
-                    forceApplyPosition();
-                }
-            });
+            // Continuously ensure position is correct
+            setInterval(setButtonPosition, 100);
         }
         
         setTimeout(() => {
