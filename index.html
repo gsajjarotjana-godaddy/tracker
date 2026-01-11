@@ -453,26 +453,26 @@
         }
 
         .floating-add-btn {
-            position: fixed;
-            bottom: calc(30px + env(safe-area-inset-bottom, 0px));
-            right: calc(50% - 125px);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #000000;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            line-height: 1;
-            cursor: pointer;
-            z-index: 1001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.3s;
-            transform: translateZ(0);
-            margin: 0;
-            padding: 0;
+            position: fixed !important;
+            bottom: calc(40px + env(safe-area-inset-bottom, 0px)) !important;
+            right: calc(50% - 125px) !important;
+            width: 50px !important;
+            height: 50px !important;
+            border-radius: 50% !important;
+            background: #000000 !important;
+            border: none !important;
+            color: white !important;
+            font-size: 1.5rem !important;
+            line-height: 1 !important;
+            cursor: pointer !important;
+            z-index: 1001 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: transform 0.3s !important;
+            transform: translateZ(0) !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
         @media (max-width: 600px) {
@@ -3547,47 +3547,78 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Ensure button position is consistent across all tabs
+        // Lock button position to be consistent across all tabs
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
-            // Fixed bottom position - increased to be lower
-            const BASE_BOTTOM = 30; // Increased from 20px to 30px
+            // Fixed bottom position - make it lower
+            const BASE_BOTTOM = 40; // Increased to 40px to be lower
             
-            const setButtonPosition = () => {
+            // Lock the position - this function will be called to maintain consistency
+            const lockButtonPosition = () => {
                 // Get safe area bottom
                 const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
                 const bottomValue = BASE_BOTTOM + safeAreaBottom;
+                const rightValue = window.innerWidth <= 600 ? '20px' : 'calc(50% - 125px)';
                 
-                // Set the position explicitly with !important
+                // Force set the position with !important
                 floatingBtn.style.setProperty('bottom', `${bottomValue}px`, 'important');
-                floatingBtn.style.setProperty('right', window.innerWidth <= 600 ? '20px' : 'calc(50% - 125px)', 'important');
+                floatingBtn.style.setProperty('right', rightValue, 'important');
+                floatingBtn.style.setProperty('position', 'fixed', 'important');
             };
             
-            // Set position immediately and after delays
-            setButtonPosition();
-            setTimeout(setButtonPosition, 50);
-            setTimeout(setButtonPosition, 200);
-            setTimeout(setButtonPosition, 500);
+            // Lock position immediately
+            lockButtonPosition();
             
-            // Override switchTab to ensure position is set when switching tabs
+            // Lock position multiple times to catch any layout shifts
+            setTimeout(lockButtonPosition, 10);
+            setTimeout(lockButtonPosition, 50);
+            setTimeout(lockButtonPosition, 100);
+            setTimeout(lockButtonPosition, 200);
+            setTimeout(lockButtonPosition, 500);
+            
+            // Override switchTab to lock position when switching tabs
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
+                    // Lock position BEFORE switching
+                    lockButtonPosition();
                     const result = originalSwitchTab.apply(this, args);
-                    setTimeout(setButtonPosition, 10);
-                    setTimeout(setButtonPosition, 100);
+                    // Lock position AFTER switching at multiple intervals
+                    setTimeout(lockButtonPosition, 0);
+                    setTimeout(lockButtonPosition, 10);
+                    setTimeout(lockButtonPosition, 50);
+                    setTimeout(lockButtonPosition, 100);
+                    setTimeout(lockButtonPosition, 200);
                     return result;
                 };
             }
             
-            // Also set on resize
-            window.addEventListener('resize', setButtonPosition);
+            // Lock on resize
+            window.addEventListener('resize', lockButtonPosition);
             
-            // Use MutationObserver to watch for any style changes
+            // Continuously monitor and lock position
+            setInterval(lockButtonPosition, 100);
+            
+            // Use MutationObserver to catch any style changes
             const observer = new MutationObserver(() => {
-                setButtonPosition();
+                lockButtonPosition();
             });
-            observer.observe(floatingBtn, { attributes: true, attributeFilter: ['style'] });
+            observer.observe(floatingBtn, { 
+                attributes: true, 
+                attributeFilter: ['style', 'class'],
+                childList: false,
+                subtree: false
+            });
+            
+            // Also observe body for layout changes
+            const bodyObserver = new MutationObserver(() => {
+                lockButtonPosition();
+            });
+            bodyObserver.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: false
+            });
         }
         
         setTimeout(() => {
