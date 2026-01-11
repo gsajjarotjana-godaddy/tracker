@@ -3551,22 +3551,20 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Ensure button is always exactly 20px from bottom right using actual viewport
+        // Lock button position to prevent movement after initial load
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
-            const setExactPosition = () => {
-                // Use actual window dimensions to calculate position
-                const viewportHeight = window.innerHeight;
-                
+            // Capture the initial correct position immediately
+            let lockedBottomValue = null;
+            let lockedRightValue = 20;
+            
+            const captureAndLockPosition = () => {
                 // Get safe area bottom
                 let safeAreaBottom = 0;
                 try {
-                    // Try visual viewport if available (for apps)
                     if (window.visualViewport) {
-                        safeAreaBottom = viewportHeight - window.visualViewport.height;
+                        safeAreaBottom = window.innerHeight - window.visualViewport.height;
                     }
-                    
-                    // Fallback: try CSS env
                     if (safeAreaBottom === 0) {
                         const testDiv = document.createElement('div');
                         testDiv.style.cssText = 'position: absolute; visibility: hidden; padding-bottom: env(safe-area-inset-bottom);';
@@ -3582,15 +3580,19 @@
                     safeAreaBottom = 0;
                 }
                 
-                // Calculate exact bottom position: 20px from bottom + safe area
+                // Calculate position: 20px from bottom + safe area
                 const bottomPx = 20 + safeAreaBottom;
-                const rightPx = 20;
                 
-                // Set using cssText to override everything
+                // Lock the position if not already locked
+                if (lockedBottomValue === null) {
+                    lockedBottomValue = bottomPx;
+                }
+                
+                // Always apply the locked position
                 floatingBtn.style.cssText = `
                     position: fixed !important;
-                    bottom: ${bottomPx}px !important;
-                    right: ${rightPx}px !important;
+                    bottom: ${lockedBottomValue}px !important;
+                    right: ${lockedRightValue}px !important;
                     top: auto !important;
                     left: auto !important;
                     width: 50px !important;
@@ -3613,31 +3615,58 @@
                 `;
             };
             
-            // Set immediately
-            setExactPosition();
+            // Capture position immediately on load
+            captureAndLockPosition();
             
-            // Set when switching tabs
-            const originalSwitchTab = window.switchTab;
-            if (originalSwitchTab) {
-                window.switchTab = function(...args) {
-                    setExactPosition();
-                    const result = originalSwitchTab.apply(this, args);
-                    setExactPosition();
-                    setTimeout(setExactPosition, 0);
-                    setTimeout(setExactPosition, 50);
-                    setTimeout(setExactPosition, 100);
+            // Lock position before updateProgressArch runs
+            const originalUpdateProgressArch = window.updateProgressArch;
+            if (originalUpdateProgressArch) {
+                window.updateProgressArch = function(...args) {
+                    // Lock position before DOM manipulation
+                    if (lockedBottomValue !== null) {
+                        floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
+                        floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
+                    }
+                    const result = originalUpdateProgressArch.apply(this, args);
+                    // Lock position after DOM manipulation
+                    if (lockedBottomValue !== null) {
+                        floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
+                        floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
+                    }
                     return result;
                 };
             }
             
-            // Set on resize and visual viewport changes
-            window.addEventListener('resize', setExactPosition);
-            if (window.visualViewport) {
-                window.visualViewport.addEventListener('resize', setExactPosition);
+            // Lock position when switching tabs
+            const originalSwitchTab = window.switchTab;
+            if (originalSwitchTab) {
+                window.switchTab = function(...args) {
+                    if (lockedBottomValue !== null) {
+                        floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
+                        floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
+                    }
+                    const result = originalSwitchTab.apply(this, args);
+                    if (lockedBottomValue !== null) {
+                        floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
+                        floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
+                    }
+                    setTimeout(() => {
+                        if (lockedBottomValue !== null) {
+                            floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
+                            floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
+                        }
+                    }, 0);
+                    return result;
+                };
             }
             
-            // Continuously ensure position
-            setInterval(setExactPosition, 100);
+            // Continuously lock position to prevent any movement
+            setInterval(() => {
+                if (lockedBottomValue !== null) {
+                    floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
+                    floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
+                }
+            }, 50);
         }
         
         setTimeout(() => {
