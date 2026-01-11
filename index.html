@@ -3553,29 +3553,41 @@
             // Store the correct position from calories/money tabs
             let correctBottomPosition = null;
             let correctRightPosition = null;
+            let positionCaptured = false;
             
-            // Function to capture and lock the correct position
-            const lockButtonPosition = () => {
-                // If we're on calories or money tab, capture the position
+            // Function to capture the correct position from calories/money tabs
+            const captureCorrectPosition = () => {
                 if (currentTab === 'calories' || currentTab === 'money') {
-                    const computed = window.getComputedStyle(floatingBtn);
-                    const bottom = computed.bottom;
-                    const right = computed.right;
-                    
-                    // Only capture if we have valid values
-                    if (bottom && bottom !== 'auto' && right && right !== 'auto') {
-                        correctBottomPosition = bottom;
-                        correctRightPosition = right;
-                    }
+                    // Wait a bit for layout to settle
+                    setTimeout(() => {
+                        const computed = window.getComputedStyle(floatingBtn);
+                        const bottom = computed.bottom;
+                        const right = computed.right;
+                        
+                        // Only capture if we have valid pixel values
+                        if (bottom && bottom !== 'auto' && right && right !== 'auto') {
+                            // Convert to pixels if needed
+                            const bottomPx = parseFloat(bottom) || parseFloat(bottom.replace('px', ''));
+                            const rightPx = right.includes('calc') ? right : (parseFloat(right) || parseFloat(right.replace('px', '')));
+                            
+                            if (bottomPx || right.includes('calc')) {
+                                correctBottomPosition = bottom;
+                                correctRightPosition = right;
+                                positionCaptured = true;
+                            }
+                        }
+                    }, 100);
                 }
-                
-                // If we have a stored position, use it
-                if (correctBottomPosition && correctRightPosition) {
+            };
+            
+            // Function to apply the captured position
+            const applyCorrectPosition = () => {
+                if (positionCaptured && correctBottomPosition && correctRightPosition) {
                     floatingBtn.style.setProperty('bottom', correctBottomPosition, 'important');
                     floatingBtn.style.setProperty('right', correctRightPosition, 'important');
                     floatingBtn.style.setProperty('position', 'fixed', 'important');
                 } else {
-                    // Fallback: use CSS calc
+                    // Fallback: use CSS calc (20px base)
                     const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
                     const bottomValue = 20 + safeAreaBottom;
                     const rightValue = window.innerWidth <= 600 ? '20px' : 'calc(50% - 125px)';
@@ -3585,35 +3597,48 @@
                 }
             };
             
-            // Lock position immediately
-            lockButtonPosition();
+            // Try to capture position immediately if on calories/money tab
+            captureCorrectPosition();
             
-            // Lock position multiple times to capture correct position
-            setTimeout(lockButtonPosition, 50);
-            setTimeout(lockButtonPosition, 100);
-            setTimeout(lockButtonPosition, 200);
-            setTimeout(lockButtonPosition, 500);
-            
-            // Override switchTab to lock position when switching tabs
+            // Override switchTab to capture and apply position
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
                     const result = originalSwitchTab.apply(this, args);
-                    // Lock position after switching
-                    setTimeout(lockButtonPosition, 0);
-                    setTimeout(lockButtonPosition, 10);
-                    setTimeout(lockButtonPosition, 50);
-                    setTimeout(lockButtonPosition, 100);
-                    setTimeout(lockButtonPosition, 200);
+                    
+                    // Try to capture position if on calories/money tab
+                    captureCorrectPosition();
+                    
+                    // Apply position after switching
+                    setTimeout(applyCorrectPosition, 0);
+                    setTimeout(applyCorrectPosition, 10);
+                    setTimeout(applyCorrectPosition, 50);
+                    setTimeout(applyCorrectPosition, 100);
+                    setTimeout(applyCorrectPosition, 200);
+                    setTimeout(applyCorrectPosition, 500);
+                    
                     return result;
                 };
             }
             
-            // Lock on resize
-            window.addEventListener('resize', lockButtonPosition);
+            // Apply position immediately and continuously
+            applyCorrectPosition();
+            setTimeout(applyCorrectPosition, 50);
+            setTimeout(applyCorrectPosition, 100);
+            setTimeout(applyCorrectPosition, 200);
+            setTimeout(applyCorrectPosition, 500);
             
-            // Continuously monitor and lock position
-            setInterval(lockButtonPosition, 200);
+            // Continuously apply position
+            setInterval(() => {
+                applyCorrectPosition();
+                captureCorrectPosition();
+            }, 300);
+            
+            // Lock on resize
+            window.addEventListener('resize', () => {
+                captureCorrectPosition();
+                applyCorrectPosition();
+            });
         }
         
         setTimeout(() => {
