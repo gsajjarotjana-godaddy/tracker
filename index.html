@@ -3579,9 +3579,10 @@
                 return 0;
             };
             
-            // Function to measure actual button position when on money/calories tabs (where it's correct)
+            // Function to measure actual button position from habits tab and apply to all tabs
             const measureCorrectPosition = () => {
-                if (currentTab === 'money' || currentTab === 'calories') {
+                // Always measure from habits tab - this is the reference position
+                if (currentTab === 'habits') {
                     // Wait for viewport to settle (especially important in app mode)
                     setTimeout(() => {
                         // getBoundingClientRect() is always relative to window.innerHeight
@@ -3677,8 +3678,8 @@
             
             // Wait for viewport to fully settle (important in app mode)
             setTimeout(() => {
-                // Try to measure position if on money/calories tab on load (where it's correct)
-                if (currentTab === 'money' || currentTab === 'calories') {
+                // Always measure from habits tab on load (this is the reference position)
+                if (currentTab === 'habits') {
                     measureCorrectPosition();
                 }
                 // Apply position after viewport settles
@@ -3713,9 +3714,12 @@
                     const result = originalSwitchTab.apply(this, args);
                     // Apply position immediately after switch - critical for habits tab
                     applyMeasuredPosition();
-                    // Try to measure position if on money/calories (to update saved value)
+                    // Always measure from habits tab (reference position) and apply to all tabs
                     setTimeout(() => {
-                        measureCorrectPosition();
+                        if (currentTab === 'habits') {
+                            measureCorrectPosition();
+                        }
+                        // Always apply the measured position to all tabs
                         applyMeasuredPosition();
                     }, 100);
                     // Apply position multiple times to ensure it sticks (especially for habits tab)
@@ -3734,10 +3738,12 @@
                 window.visualViewport.addEventListener('resize', () => {
                     setTimeout(() => {
                         applyMeasuredPosition();
-                        // Re-measure if on money/calories tab (where position is correct)
-                        if (currentTab === 'money' || currentTab === 'calories') {
+                        // Re-measure if on habits tab (reference position)
+                        if (currentTab === 'habits') {
                             measureCorrectPosition();
                         }
+                        // Always apply to all tabs
+                        applyMeasuredPosition();
                     }, 100);
                 });
             }
