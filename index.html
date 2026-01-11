@@ -3579,9 +3579,9 @@
                 return 0;
             };
             
-            // Function to measure actual button position when on habits tab (where it's currently correct)
+            // Function to measure actual button position when on money/calories tabs (where it's correct)
             const measureCorrectPosition = () => {
-                if (currentTab === 'habits') {
+                if (currentTab === 'money' || currentTab === 'calories') {
                     // Wait for viewport to settle (especially important in app mode)
                     setTimeout(() => {
                         // getBoundingClientRect() is always relative to window.innerHeight
@@ -3672,25 +3672,34 @@
                 applyMeasuredPosition();
             }
             
+            // Apply position immediately on load to prevent glitch
+            applyMeasuredPosition();
+            
             // Wait for viewport to fully settle (important in app mode)
             setTimeout(() => {
-                // Try to measure position if on habits tab on load (where it's correct)
-                if (currentTab === 'habits') {
+                // Try to measure position if on money/calories tab on load (where it's correct)
+                if (currentTab === 'money' || currentTab === 'calories') {
                     measureCorrectPosition();
                 }
                 // Apply position after viewport settles
                 applyMeasuredPosition();
             }, 500);
             
-            // Lock position before updateProgressArch runs (prevents movement)
+            // Lock position before updateProgressArch runs (prevents glitch on habits tab)
             const originalUpdateProgressArch = window.updateProgressArch;
             if (originalUpdateProgressArch) {
                 window.updateProgressArch = function(...args) {
+                    // Lock position BEFORE any DOM manipulation
                     applyMeasuredPosition();
+                    // Run the original function
                     const result = originalUpdateProgressArch.apply(this, args);
+                    // Lock position immediately after DOM manipulation
                     applyMeasuredPosition();
+                    // Lock multiple times to ensure it sticks
                     setTimeout(applyMeasuredPosition, 0);
+                    setTimeout(applyMeasuredPosition, 10);
                     setTimeout(applyMeasuredPosition, 50);
+                    setTimeout(applyMeasuredPosition, 100);
                     return result;
                 };
             }
@@ -3704,7 +3713,7 @@
                     const result = originalSwitchTab.apply(this, args);
                     // Apply position immediately after switch - critical for habits tab
                     applyMeasuredPosition();
-                    // Try to measure position if on habits tab (to update saved value)
+                    // Try to measure position if on money/calories (to update saved value)
                     setTimeout(() => {
                         measureCorrectPosition();
                         applyMeasuredPosition();
@@ -3725,8 +3734,8 @@
                 window.visualViewport.addEventListener('resize', () => {
                     setTimeout(() => {
                         applyMeasuredPosition();
-                        // Re-measure if on habits tab (where position is correct)
-                        if (currentTab === 'habits') {
+                        // Re-measure if on money/calories tab (where position is correct)
+                        if (currentTab === 'money' || currentTab === 'calories') {
                             measureCorrectPosition();
                         }
                     }, 100);
