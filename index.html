@@ -469,10 +469,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            transition: transform 0.3s !important;
             transform: none !important;
             margin: 0 !important;
             padding: 0 !important;
+            top: auto !important;
+            left: auto !important;
         }
         
         @media (max-width: 600px) {
@@ -3546,6 +3548,15 @@
         
         // Initialize calorie view
         updateCalorieViewDisplay();
+        
+        // Fix button position after layout settles to prevent shift
+        const floatingBtn = document.querySelector('.floating-add-btn');
+        if (floatingBtn) {
+            // Force recalculation of position after a short delay
+            setTimeout(() => {
+                floatingBtn.style.bottom = `calc(20px + env(safe-area-inset-bottom))`;
+            }, 200);
+        }
         
         setTimeout(() => {
             updateProgressArch();
