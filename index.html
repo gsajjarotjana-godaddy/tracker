@@ -3580,11 +3580,18 @@
             // Function to force apply the captured position
             const forceApplyPosition = () => {
                 if (positionLocked && correctBottomValue !== null && correctRightValue !== null) {
-                    // Apply the exact captured position with !important
-                    // Use the captured value directly - it should match money tab exactly
+                    // On habits tab, add an offset to match money tab position (make it lower)
+                    let bottomToUse = correctBottomValue;
+                    if (currentTab === 'habits') {
+                        // Add offset to move button down to match money tab
+                        // The button appears higher on habits tab, so we need to increase bottom value
+                        bottomToUse = correctBottomValue + 10; // Add 10px to move it down
+                    }
+                    
+                    // Apply the position with !important
                     floatingBtn.style.cssText = `
                         position: fixed !important;
-                        bottom: ${correctBottomValue}px !important;
+                        bottom: ${bottomToUse}px !important;
                         right: ${correctRightValue}px !important;
                         top: auto !important;
                         left: auto !important;
