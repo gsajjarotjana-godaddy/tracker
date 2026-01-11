@@ -453,26 +453,26 @@
         }
 
         .floating-add-btn {
-            position: fixed !important;
-            bottom: calc(40px + env(safe-area-inset-bottom, 0px)) !important;
-            right: calc(50% - 125px) !important;
-            width: 50px !important;
-            height: 50px !important;
-            border-radius: 50% !important;
-            background: #000000 !important;
-            border: none !important;
-            color: white !important;
-            font-size: 1.5rem !important;
-            line-height: 1 !important;
-            cursor: pointer !important;
-            z-index: 1001 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            transition: transform 0.3s !important;
-            transform: translateZ(0) !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            position: fixed;
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            right: calc(50% - 125px);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #000000;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+            transform: translateZ(0);
+            margin: 0;
+            padding: 0;
         }
         
         @media (max-width: 600px) {
@@ -3547,30 +3547,48 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Lock button position to be consistent across all tabs
+        // Lock button position to match calories/money tabs exactly
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
-            // Fixed bottom position - make it lower
-            const BASE_BOTTOM = 40; // Increased to 40px to be lower
+            // Store the correct position from calories/money tabs
+            let correctBottomPosition = null;
+            let correctRightPosition = null;
             
-            // Lock the position - this function will be called to maintain consistency
+            // Function to capture and lock the correct position
             const lockButtonPosition = () => {
-                // Get safe area bottom
-                const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
-                const bottomValue = BASE_BOTTOM + safeAreaBottom;
-                const rightValue = window.innerWidth <= 600 ? '20px' : 'calc(50% - 125px)';
+                // If we're on calories or money tab, capture the position
+                if (currentTab === 'calories' || currentTab === 'money') {
+                    const computed = window.getComputedStyle(floatingBtn);
+                    const bottom = computed.bottom;
+                    const right = computed.right;
+                    
+                    // Only capture if we have valid values
+                    if (bottom && bottom !== 'auto' && right && right !== 'auto') {
+                        correctBottomPosition = bottom;
+                        correctRightPosition = right;
+                    }
+                }
                 
-                // Force set the position with !important
-                floatingBtn.style.setProperty('bottom', `${bottomValue}px`, 'important');
-                floatingBtn.style.setProperty('right', rightValue, 'important');
-                floatingBtn.style.setProperty('position', 'fixed', 'important');
+                // If we have a stored position, use it
+                if (correctBottomPosition && correctRightPosition) {
+                    floatingBtn.style.setProperty('bottom', correctBottomPosition, 'important');
+                    floatingBtn.style.setProperty('right', correctRightPosition, 'important');
+                    floatingBtn.style.setProperty('position', 'fixed', 'important');
+                } else {
+                    // Fallback: use CSS calc
+                    const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
+                    const bottomValue = 20 + safeAreaBottom;
+                    const rightValue = window.innerWidth <= 600 ? '20px' : 'calc(50% - 125px)';
+                    floatingBtn.style.setProperty('bottom', `${bottomValue}px`, 'important');
+                    floatingBtn.style.setProperty('right', rightValue, 'important');
+                    floatingBtn.style.setProperty('position', 'fixed', 'important');
+                }
             };
             
             // Lock position immediately
             lockButtonPosition();
             
-            // Lock position multiple times to catch any layout shifts
-            setTimeout(lockButtonPosition, 10);
+            // Lock position multiple times to capture correct position
             setTimeout(lockButtonPosition, 50);
             setTimeout(lockButtonPosition, 100);
             setTimeout(lockButtonPosition, 200);
@@ -3580,10 +3598,8 @@
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
-                    // Lock position BEFORE switching
-                    lockButtonPosition();
                     const result = originalSwitchTab.apply(this, args);
-                    // Lock position AFTER switching at multiple intervals
+                    // Lock position after switching
                     setTimeout(lockButtonPosition, 0);
                     setTimeout(lockButtonPosition, 10);
                     setTimeout(lockButtonPosition, 50);
@@ -3597,28 +3613,7 @@
             window.addEventListener('resize', lockButtonPosition);
             
             // Continuously monitor and lock position
-            setInterval(lockButtonPosition, 100);
-            
-            // Use MutationObserver to catch any style changes
-            const observer = new MutationObserver(() => {
-                lockButtonPosition();
-            });
-            observer.observe(floatingBtn, { 
-                attributes: true, 
-                attributeFilter: ['style', 'class'],
-                childList: false,
-                subtree: false
-            });
-            
-            // Also observe body for layout changes
-            const bodyObserver = new MutationObserver(() => {
-                lockButtonPosition();
-            });
-            bodyObserver.observe(document.body, {
-                childList: true,
-                subtree: true,
-                attributes: false
-            });
+            setInterval(lockButtonPosition, 200);
         }
         
         setTimeout(() => {
