@@ -3547,36 +3547,103 @@
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
             const setButtonPosition = () => {
-                // Get safe area bottom
-                const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
+                // Calculate safe area bottom
+                let safeAreaBottom = 0;
+                try {
+                    // Method 1: Try to measure actual safe area
+                    const viewportHeight = window.innerHeight;
+                    const visualViewportHeight = window.visualViewport ? window.visualViewport.height : viewportHeight;
+                    safeAreaBottom = viewportHeight - visualViewportHeight;
+                    
+                    // Method 2: Try CSS env variable
+                    if (safeAreaBottom === 0) {
+                        const testEl = document.createElement('div');
+                        testEl.style.paddingBottom = 'env(safe-area-inset-bottom)';
+                        testEl.style.position = 'absolute';
+                        testEl.style.visibility = 'hidden';
+                        document.body.appendChild(testEl);
+                        const computed = window.getComputedStyle(testEl);
+                        const padding = computed.paddingBottom;
+                        document.body.removeChild(testEl);
+                        if (padding && padding !== '0px' && padding !== 'auto') {
+                            safeAreaBottom = parseFloat(padding) || 0;
+                        }
+                    }
+                } catch (e) {
+                    safeAreaBottom = 0;
+                }
+                
+                // Always 20px from bottom (plus safe area)
                 const bottomValue = 20 + safeAreaBottom;
                 
-                // Always set to 20px from bottom right
-                floatingBtn.style.setProperty('bottom', `${bottomValue}px`, 'important');
-                floatingBtn.style.setProperty('right', '20px', 'important');
-                floatingBtn.style.setProperty('position', 'fixed', 'important');
+                // Calculate right position - always 20px from right
+                const rightValue = 20;
+                
+                // Use cssText to completely override all styles
+                floatingBtn.style.cssText = `
+                    position: fixed !important;
+                    bottom: ${bottomValue}px !important;
+                    right: ${rightValue}px !important;
+                    top: auto !important;
+                    left: auto !important;
+                    width: 50px !important;
+                    height: 50px !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    border-radius: 50% !important;
+                    background: #000000 !important;
+                    border: none !important;
+                    color: white !important;
+                    font-size: 1.5rem !important;
+                    line-height: 1 !important;
+                    cursor: pointer !important;
+                    z-index: 1001 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    transition: transform 0.3s !important;
+                    transform: translateZ(0) !important;
+                `;
             };
             
-            // Set position immediately
+            // Set position immediately and multiple times
             setButtonPosition();
+            [0, 1, 5, 10, 20, 50, 100, 200, 300, 500, 1000].forEach(delay => {
+                setTimeout(setButtonPosition, delay);
+            });
             
             // Set position when switching tabs
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
-                    const result = originalSwitchTab.apply(this, args);
+                    // Set position BEFORE switching
                     setButtonPosition();
-                    setTimeout(setButtonPosition, 10);
-                    setTimeout(setButtonPosition, 50);
+                    const result = originalSwitchTab.apply(this, args);
+                    // Set position AFTER switching at many intervals
+                    setButtonPosition();
+                    [0, 1, 2, 5, 10, 20, 50, 100, 200, 300, 500, 1000].forEach(delay => {
+                        setTimeout(setButtonPosition, delay);
+                    });
                     return result;
                 };
             }
             
-            // Set on resize
+            // Set on resize and orientation change
             window.addEventListener('resize', setButtonPosition);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(setButtonPosition, 100);
+                setTimeout(setButtonPosition, 300);
+            });
             
-            // Continuously ensure position is correct
-            setInterval(setButtonPosition, 100);
+            // Use requestAnimationFrame to continuously lock position every frame
+            const lockPosition = () => {
+                setButtonPosition();
+                requestAnimationFrame(lockPosition);
+            };
+            requestAnimationFrame(lockPosition);
+            
+            // Also use setInterval as backup (every 16ms = 60fps)
+            setInterval(setButtonPosition, 16);
         }
         
         setTimeout(() => {
