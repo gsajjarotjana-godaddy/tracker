@@ -3547,7 +3547,7 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Lock button position to match money tab exactly
+        // Lock button position to match money tab exactly - prevent any movement
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
             // Store the correct position from money tab
@@ -3558,26 +3558,30 @@
             // Function to capture the exact position from money tab
             const captureMoneyTabPosition = () => {
                 if (currentTab === 'money' || currentTab === 'calories') {
-                    // Multiple attempts to capture
-                    [50, 100, 150, 200, 300].forEach(delay => {
-                        setTimeout(() => {
-                            const rect = floatingBtn.getBoundingClientRect();
-                            const viewportHeight = window.innerHeight;
-                            const bottomDistance = viewportHeight - rect.bottom;
-                            const rightDistance = window.innerWidth - rect.right;
-                            
-                            // Only update if we got valid values
-                            if (bottomDistance > 0 && rightDistance >= 0) {
-                                correctBottomValue = bottomDistance;
-                                correctRightValue = rightDistance;
-                                positionLocked = true;
-                            }
-                        }, delay);
+                    // Capture immediately and at multiple intervals
+                    const capture = () => {
+                        const rect = floatingBtn.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const bottomDistance = viewportHeight - rect.bottom;
+                        const rightDistance = window.innerWidth - rect.right;
+                        
+                        // Only update if we got valid values
+                        if (bottomDistance > 0 && rightDistance >= 0) {
+                            correctBottomValue = bottomDistance;
+                            correctRightValue = rightDistance;
+                            positionLocked = true;
+                        }
+                    };
+                    
+                    // Capture at multiple times
+                    capture();
+                    [10, 50, 100, 150, 200, 300, 500].forEach(delay => {
+                        setTimeout(capture, delay);
                     });
                 }
             };
             
-            // Function to force apply the captured position
+            // Function to force apply the captured position - called very frequently
             const forceApplyPosition = () => {
                 if (positionLocked && correctBottomValue !== null && correctRightValue !== null) {
                     // Always apply the captured position with !important
@@ -3586,51 +3590,75 @@
                     floatingBtn.style.setProperty('position', 'fixed', 'important');
                     floatingBtn.style.setProperty('top', 'auto', 'important');
                     floatingBtn.style.setProperty('left', 'auto', 'important');
+                    floatingBtn.style.setProperty('margin', '0', 'important');
+                    floatingBtn.style.setProperty('padding', '0', 'important');
                 } else if (currentTab === 'money' || currentTab === 'calories') {
                     // On money/calories, capture position
                     captureMoneyTabPosition();
                 }
             };
             
-            // Override switchTab to capture and force apply position
+            // Override switchTab to capture and force apply position BEFORE any rendering
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
+                    // Apply position BEFORE switching to prevent any movement
+                    if (positionLocked) {
+                        forceApplyPosition();
+                    }
+                    
                     const result = originalSwitchTab.apply(this, args);
                     
-                    // Immediately force apply position
-                    forceApplyPosition();
+                    // Immediately apply position after switch
+                    if (positionLocked) {
+                        forceApplyPosition();
+                    }
                     
                     // Capture if on money/calories
                     if (currentTab === 'money' || currentTab === 'calories') {
                         captureMoneyTabPosition();
                     }
                     
-                    // Force apply multiple times after switch
-                    [0, 10, 20, 50, 100, 150, 200, 300, 500].forEach(delay => {
-                        setTimeout(forceApplyPosition, delay);
+                    // Force apply at many intervals to catch any layout shifts
+                    [0, 1, 2, 5, 10, 15, 20, 30, 50, 75, 100, 150, 200, 300, 500].forEach(delay => {
+                        setTimeout(() => {
+                            if (positionLocked) {
+                                forceApplyPosition();
+                            }
+                        }, delay);
                     });
                     
                     return result;
                 };
             }
             
-            // Initial setup
+            // Initial setup - capture if on money/calories
             if (currentTab === 'money' || currentTab === 'calories') {
                 captureMoneyTabPosition();
             }
             forceApplyPosition();
             
-            // Aggressively lock position, especially on habits tab
-            setInterval(() => {
+            // Use requestAnimationFrame to lock position every frame on habits tab
+            const lockPosition = () => {
                 if (currentTab === 'habits' && positionLocked) {
-                    // On habits tab, continuously force the position
+                    // On habits tab, lock position every single frame
                     forceApplyPosition();
                 } else if (currentTab === 'money' || currentTab === 'calories') {
-                    // On money/calories, capture position
+                    // On money/calories, capture position periodically
                     captureMoneyTabPosition();
                 }
-            }, 50); // Check every 50ms
+                requestAnimationFrame(lockPosition);
+            };
+            requestAnimationFrame(lockPosition);
+            
+            // Also use setInterval as backup
+            setInterval(() => {
+                if (currentTab === 'habits' && positionLocked) {
+                    forceApplyPosition();
+                } else if (currentTab === 'money' || currentTab === 'calories') {
+                    captureMoneyTabPosition();
+                }
+            }, 16); // Every ~16ms (60fps)
             
             // Lock on resize
             window.addEventListener('resize', () => {
@@ -3639,15 +3667,6 @@
                 }
                 forceApplyPosition();
             });
-            
-            // Also use requestAnimationFrame for smooth locking
-            const lockPosition = () => {
-                if (currentTab === 'habits' && positionLocked) {
-                    forceApplyPosition();
-                }
-                requestAnimationFrame(lockPosition);
-            };
-            requestAnimationFrame(lockPosition);
         }
         
         setTimeout(() => {
