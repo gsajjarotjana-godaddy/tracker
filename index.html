@@ -3543,31 +3543,103 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Lock button position to prevent movement after DOM changes
+        // Lock button position - measure from correct tabs and apply to all
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
-            // Function to ensure position stays locked (CSS handles the actual positioning)
-            const lockPosition = () => {
-                // Just ensure the CSS values are maintained - don't override them
-                // The CSS calc() should handle positioning consistently
-                floatingBtn.style.setProperty('position', 'fixed', 'important');
-                floatingBtn.style.setProperty('bottom', 'calc(20px + env(safe-area-inset-bottom, 0px))', 'important');
-                floatingBtn.style.setProperty('right', '20px', 'important');
-                floatingBtn.style.setProperty('top', 'auto', 'important');
-                floatingBtn.style.setProperty('left', 'auto', 'important');
-                floatingBtn.style.setProperty('margin', '0', 'important');
-                floatingBtn.style.setProperty('padding', '0', 'important');
+            let measuredBottomValue = null;
+            const STORAGE_KEY = 'floatingBtnBottom';
+            
+            // Detect if running as standalone app (PWA)
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone === true ||
+                                 document.referrer.includes('android-app://');
+            
+            // Load previously measured value from localStorage
+            const savedValue = localStorage.getItem(STORAGE_KEY);
+            if (savedValue) {
+                measuredBottomValue = parseFloat(savedValue);
+            }
+            
+            // Function to measure actual button position when on money/calories tabs
+            const measureCorrectPosition = () => {
+                if (currentTab === 'money' || currentTab === 'calories') {
+                    // Wait for layout to settle
+                    setTimeout(() => {
+                        const rect = floatingBtn.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const bottomDistance = viewportHeight - rect.bottom;
+                        
+                        // Only save if we got a reasonable value (20-100px range)
+                        if (bottomDistance >= 15 && bottomDistance <= 100) {
+                            measuredBottomValue = bottomDistance;
+                            // Save to localStorage for persistence
+                            localStorage.setItem(STORAGE_KEY, bottomDistance.toString());
+                            // Apply immediately
+                            applyMeasuredPosition();
+                        }
+                    }, 200);
+                }
             };
+            
+            // Function to apply the measured position
+            const applyMeasuredPosition = () => {
+                if (measuredBottomValue !== null) {
+                    // Use the exact measured pixel value
+                    floatingBtn.style.cssText = `
+                        position: fixed !important;
+                        bottom: ${measuredBottomValue}px !important;
+                        right: 20px !important;
+                        top: auto !important;
+                        left: auto !important;
+                        width: 50px !important;
+                        height: 50px !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        border-radius: 50% !important;
+                        background: #000000 !important;
+                        border: none !important;
+                        color: white !important;
+                        font-size: 1.5rem !important;
+                        line-height: 1 !important;
+                        cursor: pointer !important;
+                        z-index: 1001 !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        transition: transform 0.3s !important;
+                        transform: translateZ(0) !important;
+                    `;
+                } else {
+                    // Fallback to CSS calc if no measurement yet
+                    floatingBtn.style.setProperty('position', 'fixed', 'important');
+                    floatingBtn.style.setProperty('bottom', 'calc(20px + env(safe-area-inset-bottom, 0px))', 'important');
+                    floatingBtn.style.setProperty('right', '20px', 'important');
+                    floatingBtn.style.setProperty('top', 'auto', 'important');
+                    floatingBtn.style.setProperty('left', 'auto', 'important');
+                    floatingBtn.style.setProperty('margin', '0', 'important');
+                    floatingBtn.style.setProperty('padding', '0', 'important');
+                }
+            };
+            
+            // If we have a saved value, apply it immediately
+            if (measuredBottomValue !== null) {
+                applyMeasuredPosition();
+            }
+            
+            // Try to measure position if on money/calories tab on load
+            if (currentTab === 'money' || currentTab === 'calories') {
+                measureCorrectPosition();
+            }
             
             // Lock position before updateProgressArch runs (prevents movement)
             const originalUpdateProgressArch = window.updateProgressArch;
             if (originalUpdateProgressArch) {
                 window.updateProgressArch = function(...args) {
-                    lockPosition();
+                    applyMeasuredPosition();
                     const result = originalUpdateProgressArch.apply(this, args);
-                    lockPosition();
-                    setTimeout(lockPosition, 0);
-                    setTimeout(lockPosition, 50);
+                    applyMeasuredPosition();
+                    setTimeout(applyMeasuredPosition, 0);
+                    setTimeout(applyMeasuredPosition, 50);
                     return result;
                 };
             }
@@ -3576,17 +3648,22 @@
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
-                    lockPosition();
+                    applyMeasuredPosition();
                     const result = originalSwitchTab.apply(this, args);
-                    lockPosition();
-                    setTimeout(lockPosition, 0);
-                    setTimeout(lockPosition, 50);
+                    // Try to measure position if on money/calories (to update saved value)
+                    measureCorrectPosition();
+                    // Apply position after switch
+                    applyMeasuredPosition();
+                    setTimeout(applyMeasuredPosition, 0);
+                    setTimeout(applyMeasuredPosition, 50);
+                    setTimeout(applyMeasuredPosition, 100);
+                    setTimeout(applyMeasuredPosition, 200);
                     return result;
                 };
             }
             
             // Continuously ensure position is locked (prevents any drift)
-            setInterval(lockPosition, 100);
+            setInterval(applyMeasuredPosition, 100);
         }
         
         setTimeout(() => {
