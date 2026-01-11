@@ -454,7 +454,7 @@
 
         .floating-add-btn {
             position: fixed;
-            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(30px + env(safe-area-inset-bottom, 0px));
             right: calc(50% - 125px);
             width: 50px;
             height: 50px;
@@ -3550,23 +3550,17 @@
         // Ensure button position is consistent across all tabs
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
-            // Store the correct bottom position (from money/calories tabs where it works)
-            let correctBottomPosition = null;
+            // Fixed bottom position - increased to be lower
+            const BASE_BOTTOM = 30; // Increased from 20px to 30px
             
             const setButtonPosition = () => {
-                // Use viewport height to calculate consistent position
-                const viewportHeight = window.innerHeight;
+                // Get safe area bottom
                 const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
-                const bottomValue = 20 + safeAreaBottom;
+                const bottomValue = BASE_BOTTOM + safeAreaBottom;
                 
-                // Set the position explicitly
-                floatingBtn.style.bottom = `${bottomValue}px`;
-                floatingBtn.style.right = window.innerWidth <= 600 ? '20px' : 'calc(50% - 125px)';
-                
-                // Store the correct position after first calculation
-                if (correctBottomPosition === null) {
-                    correctBottomPosition = bottomValue;
-                }
+                // Set the position explicitly with !important
+                floatingBtn.style.setProperty('bottom', `${bottomValue}px`, 'important');
+                floatingBtn.style.setProperty('right', window.innerWidth <= 600 ? '20px' : 'calc(50% - 125px)', 'important');
             };
             
             // Set position immediately and after delays
@@ -3589,11 +3583,11 @@
             // Also set on resize
             window.addEventListener('resize', setButtonPosition);
             
-            // Use IntersectionObserver to detect when button position might have changed
-            const observer = new IntersectionObserver(() => {
+            // Use MutationObserver to watch for any style changes
+            const observer = new MutationObserver(() => {
                 setButtonPosition();
-            }, { root: null, rootMargin: '0px', threshold: 0 });
-            observer.observe(floatingBtn);
+            });
+            observer.observe(floatingBtn, { attributes: true, attributeFilter: ['style'] });
         }
         
         setTimeout(() => {
