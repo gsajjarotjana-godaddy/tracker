@@ -3543,76 +3543,111 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Lock button position - measure from correct tabs and apply to all
+        // Lock button position - account for Safari search bar differences in app mode
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
             let measuredBottomValue = null;
             const STORAGE_KEY = 'floatingBtnBottom';
             
-            // Detect if running as standalone app (PWA)
+            // Detect if running as standalone app (PWA) - search bar is hidden
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                                  window.navigator.standalone === true ||
                                  document.referrer.includes('android-app://');
             
-            // Load previously measured value from localStorage
-            const savedValue = localStorage.getItem(STORAGE_KEY);
-            if (savedValue) {
-                measuredBottomValue = parseFloat(savedValue);
-            }
+            // Function to calculate safe area bottom accounting for Safari search bar
+            const getSafeAreaBottom = () => {
+                // In app mode, visualViewport is more accurate (excludes search bar)
+                if (window.visualViewport && isStandalone) {
+                    const viewportDiff = window.innerHeight - window.visualViewport.height;
+                    return Math.max(0, viewportDiff);
+                }
+                
+                // Try to get from CSS env variable
+                try {
+                    const testDiv = document.createElement('div');
+                    testDiv.style.cssText = 'position: absolute; visibility: hidden; padding-bottom: env(safe-area-inset-bottom);';
+                    document.body.appendChild(testDiv);
+                    const computed = getComputedStyle(testDiv);
+                    const padding = computed.paddingBottom;
+                    document.body.removeChild(testDiv);
+                    if (padding && padding !== '0px' && padding !== 'auto') {
+                        return parseFloat(padding) || 0;
+                    }
+                } catch (e) {
+                    // Fallback
+                }
+                return 0;
+            };
             
             // Function to measure actual button position when on money/calories tabs
             const measureCorrectPosition = () => {
                 if (currentTab === 'money' || currentTab === 'calories') {
-                    // Wait for layout to settle
+                    // Wait for viewport to settle (especially important in app mode)
                     setTimeout(() => {
+                        // Use visualViewport if available (more accurate in app mode)
+                        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
                         const rect = floatingBtn.getBoundingClientRect();
-                        const viewportHeight = window.innerHeight;
                         const bottomDistance = viewportHeight - rect.bottom;
                         
-                        // Only save if we got a reasonable value (20-100px range)
+                        // Only save if we got a reasonable value (15-100px range)
                         if (bottomDistance >= 15 && bottomDistance <= 100) {
                             measuredBottomValue = bottomDistance;
-                            // Save to localStorage for persistence
+                            // Save to localStorage with app mode flag
                             localStorage.setItem(STORAGE_KEY, bottomDistance.toString());
+                            localStorage.setItem(STORAGE_KEY + '_isApp', isStandalone ? 'true' : 'false');
                             // Apply immediately
                             applyMeasuredPosition();
                         }
-                    }, 200);
+                    }, 300); // Longer delay to ensure viewport has settled
                 }
             };
             
             // Function to apply the measured position
             const applyMeasuredPosition = () => {
                 if (measuredBottomValue !== null) {
-                    // Use the exact measured pixel value
-                    floatingBtn.style.cssText = `
-                        position: fixed !important;
-                        bottom: ${measuredBottomValue}px !important;
-                        right: 20px !important;
-                        top: auto !important;
-                        left: auto !important;
-                        width: 50px !important;
-                        height: 50px !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        border-radius: 50% !important;
-                        background: #000000 !important;
-                        border: none !important;
-                        color: white !important;
-                        font-size: 1.5rem !important;
-                        line-height: 1 !important;
-                        cursor: pointer !important;
-                        z-index: 1001 !important;
-                        display: flex !important;
-                        align-items: center !important;
-                        justify-content: center !important;
-                        transition: transform 0.3s !important;
-                        transform: translateZ(0) !important;
-                    `;
+                    // Check if saved value was from same mode (app vs browser)
+                    const savedIsApp = localStorage.getItem(STORAGE_KEY + '_isApp') === 'true';
+                    if (savedIsApp === isStandalone) {
+                        // Use saved value if from same mode
+                        floatingBtn.style.cssText = `
+                            position: fixed !important;
+                            bottom: ${measuredBottomValue}px !important;
+                            right: 20px !important;
+                            top: auto !important;
+                            left: auto !important;
+                            width: 50px !important;
+                            height: 50px !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            border-radius: 50% !important;
+                            background: #000000 !important;
+                            border: none !important;
+                            color: white !important;
+                            font-size: 1.5rem !important;
+                            line-height: 1 !important;
+                            cursor: pointer !important;
+                            z-index: 1001 !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            transition: transform 0.3s !important;
+                            transform: translateZ(0) !important;
+                        `;
+                    } else {
+                        // Recalculate if mode changed
+                        measuredBottomValue = null;
+                        const safeArea = getSafeAreaBottom();
+                        const bottomPx = 20 + safeArea;
+                        floatingBtn.style.setProperty('bottom', `${bottomPx}px`, 'important');
+                        floatingBtn.style.setProperty('right', '20px', 'important');
+                        floatingBtn.style.setProperty('position', 'fixed', 'important');
+                    }
                 } else {
-                    // Fallback to CSS calc if no measurement yet
+                    // Calculate from safe area
+                    const safeArea = getSafeAreaBottom();
+                    const bottomPx = 20 + safeArea;
                     floatingBtn.style.setProperty('position', 'fixed', 'important');
-                    floatingBtn.style.setProperty('bottom', 'calc(20px + env(safe-area-inset-bottom, 0px))', 'important');
+                    floatingBtn.style.setProperty('bottom', `${bottomPx}px`, 'important');
                     floatingBtn.style.setProperty('right', '20px', 'important');
                     floatingBtn.style.setProperty('top', 'auto', 'important');
                     floatingBtn.style.setProperty('left', 'auto', 'important');
@@ -3621,15 +3656,26 @@
                 }
             };
             
+            // Load previously measured value from localStorage
+            const savedValue = localStorage.getItem(STORAGE_KEY);
+            if (savedValue) {
+                measuredBottomValue = parseFloat(savedValue);
+            }
+            
             // If we have a saved value, apply it immediately
             if (measuredBottomValue !== null) {
                 applyMeasuredPosition();
             }
             
-            // Try to measure position if on money/calories tab on load
-            if (currentTab === 'money' || currentTab === 'calories') {
-                measureCorrectPosition();
-            }
+            // Wait for viewport to fully settle (important in app mode)
+            setTimeout(() => {
+                // Try to measure position if on money/calories tab on load
+                if (currentTab === 'money' || currentTab === 'calories') {
+                    measureCorrectPosition();
+                }
+                // Apply position after viewport settles
+                applyMeasuredPosition();
+            }, 500);
             
             // Lock position before updateProgressArch runs (prevents movement)
             const originalUpdateProgressArch = window.updateProgressArch;
@@ -3660,6 +3706,19 @@
                     setTimeout(applyMeasuredPosition, 200);
                     return result;
                 };
+            }
+            
+            // Handle visualViewport resize (important in app mode when search bar appears/disappears)
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', () => {
+                    setTimeout(() => {
+                        applyMeasuredPosition();
+                        // Re-measure if on correct tab
+                        if (currentTab === 'money' || currentTab === 'calories') {
+                            measureCorrectPosition();
+                        }
+                    }, 100);
+                });
             }
             
             // Continuously ensure position is locked (prevents any drift)
