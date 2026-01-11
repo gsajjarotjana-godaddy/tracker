@@ -485,6 +485,7 @@
             background: white;
             border-radius: 0 20px 20px 20px;
             padding: 20px;
+            padding-bottom: 20px;
             margin-bottom: 20px;
             border: 1px solid #e8e8e8;
             border-top: 1px solid white;
@@ -629,17 +630,35 @@
             margin: 0 5px;
         }
 
-        .habit-item, .transaction-item {
+        .habit-item,         .transaction-item {
             background: transparent;
             border: 1px solid #000;
             border-radius: 8px;
-            padding: 12px 15px 20px 15px;
+            padding: 12px 15px;
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: relative;
             min-height: 50px;
+        }
+        
+        #habits-list .habit-item:last-child,
+        #transactions-list .transaction-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .transaction-delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .habit-item.completed {
@@ -828,15 +847,13 @@
         .transaction-amount {
             font-size: 1.2rem;
             font-weight: 400;
+            margin-bottom: 4px;
+        }
+        
+        .transaction-info {
+            flex: 1;
         }
 
-        .transaction-amount.income {
-            color: #10b981;
-        }
-
-        .transaction-amount.expense {
-            color: #ef4444;
-        }
 
         .transaction-details {
             font-size: 0.875rem;
@@ -860,7 +877,7 @@
         }
 
         .balance-amount {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 400;
         }
 
@@ -877,6 +894,10 @@
             border-radius: 8px;
             padding: 15px;
             text-align: center;
+        }
+        
+        #budget-list .stat-card:last-child {
+            margin-bottom: 0 !important;
         }
 
         .stat-label {
@@ -1035,45 +1056,74 @@
 
         <!-- Money Tab -->
         <div id="money-tab" class="tab-content">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <div id="balance-month-year-display" style="font-size: 1.2rem; font-weight: 400; display: flex; align-items: center; gap: 8px;">
+                    <svg class="arrow-icon-section" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                    <span>January 2024</span>
+                </div>
+                <button onclick="openBalanceDateModal()" style="background: none; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </button>
+            </div>
             <div class="balance-card">
                 <div class="balance-label">Current Balance</div>
-                <div class="balance-amount" id="balance">$0.00</div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Income</div>
-                    <div class="stat-value" id="total-income" style="color: #10b981;">$0.00</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Expenses</div>
-                    <div class="stat-value" id="total-expenses" style="color: #ef4444;">$0.00</div>
+                <div class="balance-amount" id="balance" style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+                    </svg>
+                    <span>$0.00</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
+                    </svg>
                 </div>
             </div>
 
-            <h2 class="section-title">Add Transaction</h2>
-            <div class="form-group">
-                <select id="transaction-type">
-                    <option value="income">Income</option>
-                    <option value="expense">Expense</option>
-                </select>
+            <div class="stat-card" style="margin-top: 0px; display: flex; align-items: center; justify-content: space-around; padding: 20px 15px;">
+                <div style="flex: 1; text-align: center;">
+                    <div class="stat-label">tot. income</div>
+                    <div class="stat-value" id="total-income" style="font-size: 1.1rem;">$0.00</div>
+                </div>
+                <div style="width: 1px; height: 70px; background: #000; margin: 0 15px;"></div>
+                <div style="flex: 1; text-align: center;">
+                    <div class="stat-label">tot. expenses</div>
+                    <div class="stat-value" id="total-expenses" style="font-size: 1.1rem;">$0.00</div>
+                </div>
             </div>
-            <div class="form-group">
-                <input type="number" id="transaction-amount" placeholder="Amount" step="0.01" min="0">
-            </div>
-            <div class="form-group">
-                <input type="text" id="transaction-description" placeholder="Description (e.g., Salary, Groceries)">
-            </div>
-            <button class="btn btn-primary" onclick="addTransaction()">Add Transaction</button>
 
-            <h2 class="section-title" style="margin-top: 30px;">Transaction History</h2>
-            <div id="transactions-list"></div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px;">
+                <h2 class="section-title" style="margin: 0; border-bottom: none; padding-bottom: 0;">
+                    <svg class="arrow-icon-section" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                    budget
+                </h2>
+                <button onclick="addBudgetCategory()" style="background: none; border: none; cursor: pointer; padding: 5px; font-size: 1.2rem; color: #000;">+</button>
+            </div>
+            <div id="budget-list" style="margin-top: 10px;"></div>
+
+            <h2 class="section-title" style="margin-top: 25px; margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
+                <svg class="arrow-icon-section" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+                Transaction History
+            </h2>
+            <div id="transactions-list" style="margin-top: 10px;"></div>
         </div>
 
         <!-- Calories Tab -->
         <div id="calories-tab" class="tab-content">
             <div class="balance-card" style="background: #000000;">
-                <div class="balance-label">calories available today</div>
+                <div class="balance-label">calories left today</div>
                 <div class="balance-amount" id="daily-calories-available" style="display: flex; align-items: center; justify-content: center; gap: 15px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z"/>
@@ -1106,7 +1156,12 @@
             </div>
 
             <div style="display: flex; align-items: center; margin-top: 30px;">
-                <h2 class="section-title" style="border-bottom: none; padding-bottom: 0; margin: 0; flex: 1;" id="calorie-view-title">weekly log</h2>
+                <h2 class="section-title" style="border-bottom: none; padding-bottom: 0; margin: 0; flex: 1;" id="calorie-view-title">
+                    <svg class="arrow-icon-section" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>weekly log
+                </h2>
                 <button class="view-toggle-btn" id="calorie-view-toggle" onclick="toggleCalorieView()" style="margin-left: auto; display: none;"></button>
             </div>
             <div id="weekly-log-content" style="display: block; margin-top: 20px;">
@@ -1192,6 +1247,117 @@
         </div>
     </div>
 
+    <!-- Delete Budget Category Confirmation Modal -->
+    <div class="modal-overlay" id="delete-budget-modal" onclick="closeDeleteBudgetModal(event)">
+        <div class="modal-content celebration-modal-content" onclick="event.stopPropagation()">
+            <svg class="celebration-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; animation: none;">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <p class="celebration-text">are you sure you want to<br>delete this budget category?</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
+                <button class="btn btn-secondary" onclick="closeDeleteBudgetModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="confirmDeleteBudgetCategory()" style="flex: 1;">delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balance Date Selection Modal -->
+    <div class="modal-overlay" id="balance-date-modal" onclick="closeBalanceDateModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 class="section-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 10px;">select month & year</h2>
+            <div class="form-group" style="margin-bottom: 0; position: relative;">
+                <select id="balance-month-select-modal" class="modal-input" style="margin-top: 0; appearance: none; padding-right: 35px;">
+                    <option value="0">January</option>
+                    <option value="1">February</option>
+                    <option value="2">March</option>
+                    <option value="3">April</option>
+                    <option value="4">May</option>
+                    <option value="5">June</option>
+                    <option value="6">July</option>
+                    <option value="7">August</option>
+                    <option value="8">September</option>
+                    <option value="9">October</option>
+                    <option value="10">November</option>
+                    <option value="11">December</option>
+                </select>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div class="form-group" style="margin-top: 8px; margin-bottom: 0; position: relative;">
+                <select id="balance-year-select-modal" class="modal-input" style="appearance: none; padding-right: 35px;">
+                </select>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-secondary" onclick="closeBalanceDateModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="confirmBalanceDateSelection()" style="flex: 1;">select</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Transaction Confirmation Modal -->
+    <div class="modal-overlay" id="delete-transaction-modal" onclick="closeDeleteTransactionModal(event)">
+        <div class="modal-content celebration-modal-content" onclick="event.stopPropagation()">
+            <svg class="celebration-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; animation: none;">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <p class="celebration-text">are you sure you want to<br>delete this transaction?</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
+                <button class="btn btn-secondary" onclick="closeDeleteTransactionModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="confirmDeleteTransaction()" style="flex: 1;">delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Budget Modal -->
+    <div class="modal-overlay" id="add-budget-modal" onclick="closeAddBudgetModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 class="section-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 10px;">add budget</h2>
+            <div class="form-group" style="margin-bottom: 0;">
+                <input type="text" id="new-budget-name-input" placeholder="category name" class="modal-input">
+            </div>
+            <div class="form-group" style="margin-top: 8px; margin-bottom: 0; position: relative;">
+                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;">$</span>
+                <input type="number" id="new-budget-amount-input" placeholder="" step="0.01" min="0" class="modal-input" onkeypress="if(event.key==='Enter') confirmAddBudget()" style="padding-left: 24px;">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-secondary" onclick="closeAddBudgetModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="confirmAddBudget()" style="flex: 1;">add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Edit Modal -->
+    <div class="modal-overlay" id="budget-edit-modal" onclick="closeBudgetEditModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()" style="position: relative;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <h2 class="section-title" style="border-bottom: none; padding-bottom: 0; margin: 0; flex: 1;">edit budget</h2>
+                <button onclick="event.stopPropagation(); openDeleteBudgetModal();" style="background: none; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <input type="text" id="budget-name-input" placeholder="category name" class="modal-input">
+            </div>
+            <div class="form-group" style="margin-top: 8px; margin-bottom: 0; position: relative;">
+                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;">$</span>
+                <input type="number" id="budget-amount-input" placeholder="" step="0.01" min="0" class="modal-input" style="padding-left: 24px;">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-secondary" onclick="closeBudgetEditModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="saveBudgetEdit()" style="flex: 1;">save</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Set Weekly Goal Modal -->
     <div class="modal-overlay" id="set-weekly-goal-modal" onclick="closeSetWeeklyGoalModal(event)">
         <div class="modal-content celebration-modal-content" onclick="event.stopPropagation()">
@@ -1212,6 +1378,41 @@
             <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
                 <button class="btn btn-secondary" onclick="closeAddCalorieModal()" style="flex: 1;">cancel</button>
                 <button class="btn btn-primary" onclick="addCalorieEntry()" style="flex: 1;">add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div class="modal-overlay" id="add-transaction-modal" onclick="closeAddTransactionModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 class="section-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 10px;">add transaction</h2>
+            <div class="form-group" style="margin-bottom: 0; position: relative;">
+                <select id="transaction-type-modal" class="modal-input" style="padding-right: 35px; appearance: none; -webkit-appearance: none; -moz-appearance: none;">
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div class="form-group" style="margin-top: 8px; margin-bottom: 0; display: none; position: relative;" id="category-group">
+                <select id="transaction-category-modal" class="modal-input" style="padding-right: 35px; appearance: none; -webkit-appearance: none; -moz-appearance: none;">
+                    <option value="">select category</option>
+                </select>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div class="form-group" style="margin-top: 8px; margin-bottom: 0; position: relative;">
+                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;">$</span>
+                <input type="number" id="transaction-amount-modal" placeholder="" step="0.01" min="0" class="modal-input" style="padding-left: 24px;">
+            </div>
+            <div class="form-group" style="margin-top: 8px; margin-bottom: 0;">
+                <input type="text" id="transaction-description-modal" placeholder="description" class="modal-input" onkeypress="if(event.key==='Enter') addTransaction()">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-secondary" onclick="closeAddTransactionModal()" style="flex: 1;">cancel</button>
+                <button class="btn btn-primary" onclick="addTransaction()" style="flex: 1;">add</button>
             </div>
         </div>
     </div>
@@ -1283,7 +1484,9 @@
             CALORIES: 'calories_tracker_data',
             CALORIE_GOAL: 'calorie_goal_data',
             WEEKLY_CALORIES: 'weekly_calories_data',
-            SAVED_WEEKS: 'saved_weeks_data'
+            SAVED_WEEKS: 'saved_weeks_data',
+            BUDGETS: 'budgets_data',
+            BUDGET_MONTH: 'budget_month_data'
         };
 
         // Initialize data structures
@@ -1293,12 +1496,17 @@
         let calorieGoal = 2000;
         let weeklyCalorieGoal = 14000; // Default: 2000 * 7
         let savedWeeks = [];
+        let budgets = {}; // { category: { amount: number, spent: number } }
+        let budgetMonth = null; // Track which month budgets are for
+        let selectedBalanceMonth = null;
+        let selectedBalanceYear = null;
         let currentTab = 'habits';
         let currentView = 'daily';
         let currentCalorieView = 'weekly';
         let currentHabitId = null;
         let habitToDeleteId = null;
         let savedWeekToDeleteIndex = null;
+        let transactionToDeleteId = null;
 
         // Load data from localStorage on page load
         function loadData() {
@@ -1332,10 +1540,25 @@
             if (savedWeeksData) {
                 savedWeeks = JSON.parse(savedWeeksData);
             }
+            
+            const budgetsData = localStorage.getItem(STORAGE_KEYS.BUDGETS);
+            if (budgetsData) {
+                budgets = JSON.parse(budgetsData);
+            }
+            
+            const budgetMonthData = localStorage.getItem(STORAGE_KEYS.BUDGET_MONTH);
+            if (budgetMonthData) {
+                budgetMonth = budgetMonthData;
+            }
+            
+            // Check if we need to reset budgets for new month
+            checkAndResetBudgets();
 
             renderHabits();
-            renderTransactions();
             renderCalories();
+            initializeBalanceDropdowns();
+            renderTransactions();
+            renderBudgets();
             updateBalance();
         }
 
@@ -1347,6 +1570,8 @@
             localStorage.setItem(STORAGE_KEYS.CALORIE_GOAL, calorieGoal.toString());
             localStorage.setItem(STORAGE_KEYS.WEEKLY_CALORIES, weeklyCalorieGoal.toString());
             localStorage.setItem(STORAGE_KEYS.SAVED_WEEKS, JSON.stringify(savedWeeks));
+            localStorage.setItem(STORAGE_KEYS.BUDGETS, JSON.stringify(budgets));
+            localStorage.setItem(STORAGE_KEYS.BUDGET_MONTH, budgetMonth || '');
         }
 
         // View switching (daily/monthly)
@@ -1404,13 +1629,70 @@
             if (currentTab === 'habits') {
                 openAddHabitModal();
             } else if (currentTab === 'money') {
-                const amountInput = document.getElementById('transaction-amount');
-                if (amountInput) {
-                    amountInput.focus();
-                    amountInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                openAddTransactionModal();
             } else if (currentTab === 'calories') {
                 openAddCalorieModal();
+            }
+        }
+        
+        function openAddTransactionModal() {
+            const modal = document.getElementById('add-transaction-modal');
+            if (modal) {
+                modal.classList.add('open');
+                const typeInput = document.getElementById('transaction-type-modal');
+                const categoryGroup = document.getElementById('category-group');
+                const categorySelect = document.getElementById('transaction-category-modal');
+                
+                // Show category dropdown only for expenses
+                if (typeInput) {
+                    const updateCategoryVisibility = () => {
+                        if (typeInput.value === 'expense') {
+                            if (categoryGroup) categoryGroup.style.display = 'block';
+                            updateCategoryOptions();
+                        } else {
+                            if (categoryGroup) categoryGroup.style.display = 'none';
+                        }
+                    };
+                    typeInput.addEventListener('change', updateCategoryVisibility);
+                    updateCategoryVisibility();
+                }
+                
+                const amountInput = document.getElementById('transaction-amount-modal');
+                if (amountInput) {
+                    setTimeout(() => {
+                        amountInput.focus();
+                    }, 100);
+                }
+            }
+        }
+        
+        function updateCategoryOptions() {
+            const categorySelect = document.getElementById('transaction-category-modal');
+            if (!categorySelect) return;
+            
+            // Clear existing options except the first one
+            categorySelect.innerHTML = '<option value="">select category</option>';
+            
+            // Add existing budget categories
+            Object.keys(budgets).forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+        }
+        
+        function closeAddTransactionModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('add-transaction-modal');
+            if (modal) {
+                modal.classList.remove('open');
+                const amountInput = document.getElementById('transaction-amount-modal');
+                const descriptionInput = document.getElementById('transaction-description-modal');
+                if (amountInput) amountInput.value = '';
+                if (descriptionInput) descriptionInput.value = '';
             }
         }
         
@@ -1878,10 +2160,12 @@
         
         // Money functions
         function addTransaction() {
-            const type = document.getElementById('transaction-type').value;
-            const amountInput = document.getElementById('transaction-amount');
-            const descriptionInput = document.getElementById('transaction-description');
+            // Try modal inputs first, then fall back to tab inputs
+            const typeInput = document.getElementById('transaction-type-modal') || document.getElementById('transaction-type');
+            const amountInput = document.getElementById('transaction-amount-modal') || document.getElementById('transaction-amount');
+            const descriptionInput = document.getElementById('transaction-description-modal') || document.getElementById('transaction-description');
             
+            const type = typeInput.value;
             const amount = parseFloat(amountInput.value);
             const description = descriptionInput.value.trim();
 
@@ -1895,44 +2179,498 @@
                 return;
             }
 
+            // Handle category for expenses
+            let category = null;
+            if (type === 'expense') {
+                const categoryInput = document.getElementById('transaction-category-modal');
+                if (categoryInput) {
+                    category = categoryInput.value;
+                    
+                    // Update budget if category is selected
+                    if (category && budgets[category]) {
+                        budgets[category].spent += amount;
+                    }
+                }
+            }
+
             const transaction = {
                 id: Date.now(),
                 type: type,
                 amount: amount,
                 description: description,
+                category: category,
                 date: new Date().toISOString()
             };
 
             transactions.push(transaction);
             saveData();
             renderTransactions();
+            renderBudgets();
             updateBalance();
             
             amountInput.value = '';
             descriptionInput.value = '';
-        }
-
-        function deleteTransaction(transactionId) {
-            if (confirm('Are you sure you want to delete this transaction?')) {
-                transactions = transactions.filter(t => t.id !== transactionId);
-                saveData();
-                renderTransactions();
-                updateBalance();
+            const categoryInput = document.getElementById('transaction-category-modal');
+            if (categoryInput) categoryInput.value = '';
+            
+            // Close modal if it was opened from modal
+            const modal = document.getElementById('add-transaction-modal');
+            if (modal && modal.classList.contains('open')) {
+                closeAddTransactionModal();
             }
         }
 
+        function openDeleteTransactionModal(transactionId) {
+            transactionToDeleteId = transactionId;
+            const modal = document.getElementById('delete-transaction-modal');
+            if (modal) {
+                modal.classList.add('open');
+            }
+        }
+        
+        function closeDeleteTransactionModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('delete-transaction-modal');
+            if (modal) {
+                modal.classList.remove('open');
+            }
+            transactionToDeleteId = null;
+        }
+        
+        function confirmDeleteTransaction() {
+            if (transactionToDeleteId === null) return;
+            
+            const transaction = transactions.find(t => t.id === transactionToDeleteId);
+            if (transaction && transaction.type === 'expense' && transaction.category && budgets[transaction.category]) {
+                // Refund the amount back to the budget
+                budgets[transaction.category].spent -= transaction.amount;
+            }
+            
+            transactions = transactions.filter(t => t.id !== transactionToDeleteId);
+            saveData();
+            renderTransactions();
+            renderBudgets();
+            updateBalance();
+            closeDeleteTransactionModal();
+        }
+        
+        function checkAndResetBudgets() {
+            const now = new Date();
+            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (budgetMonth && budgetMonth !== currentMonth) {
+                // Reset all budgets for new month, but roll over negative amounts
+                Object.keys(budgets).forEach(category => {
+                    const budget = budgets[category];
+                    const remaining = budget.amount - budget.spent;
+                    
+                    // If over budget (negative remaining), roll over the negative amount
+                    if (remaining < 0) {
+                        // Carry over the overage: if remaining was -50, set spent to amount + 50
+                        // so remaining stays at -50 in the new month
+                        budget.spent = budget.amount + Math.abs(remaining);
+                    } else {
+                        budget.spent = 0; // Reset if not over budget
+                    }
+                });
+                budgetMonth = currentMonth;
+                saveData();
+                renderBudgets(); // Re-render to show updated budgets
+            } else if (!budgetMonth) {
+                budgetMonth = currentMonth;
+                saveData();
+            }
+        }
+        
+        function checkAndResetBudgetsForSelectedMonth() {
+            // Budgets are now calculated dynamically from transactions
+            // No need to reset budget.spent since we calculate spending from transactions
+            // The rollover is handled in renderBudgets()
+        }
+        
+        function renderBudgets() {
+            const container = document.getElementById('budget-list');
+            if (!container) return;
+            
+            if (Object.keys(budgets).length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>no budgets set</p></div>';
+                return;
+            }
+            
+            // Get selected month/year from variables, or use current month/year
+            const now = new Date();
+            const month = selectedBalanceMonth !== null ? selectedBalanceMonth : now.getMonth();
+            const year = selectedBalanceYear !== null ? selectedBalanceYear : now.getFullYear();
+            
+            // Calculate spending for selected month from transactions
+            const selectedMonthTransactions = transactions.filter(t => {
+                if (!t.date || t.type !== 'expense' || !t.category) return false;
+                const transactionDate = new Date(t.date);
+                return transactionDate.getMonth() === month && transactionDate.getFullYear() === year;
+            });
+            
+            // Calculate spending per category for selected month
+            const monthSpending = {};
+            selectedMonthTransactions.forEach(t => {
+                if (t.category && budgets[t.category]) {
+                    monthSpending[t.category] = (monthSpending[t.category] || 0) + t.amount;
+                }
+            });
+            
+            // Calculate cumulative overage from all previous months in the same year
+            // This accumulates overages month by month until fully paid back
+            const cumulativeOverage = {};
+            
+            Object.keys(budgets).forEach(category => {
+                let overage = 0;
+                
+                // Calculate overage for each month from January (or start of year) up to the month before selected month
+                for (let m = 0; m < month; m++) {
+                    const monthTransactions = transactions.filter(t => {
+                        if (!t.date || t.type !== 'expense' || !t.category) return false;
+                        const transactionDate = new Date(t.date);
+                        return transactionDate.getMonth() === m && transactionDate.getFullYear() === year && t.category === category;
+                    });
+                    
+                    const monthSpent = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
+                    const budget = budgets[category];
+                    // Calculate remaining for this month: budget - spending - previous overage
+                    const monthRemaining = budget.amount - monthSpent - overage;
+                    
+                    // If this month went over (including previous overages), accumulate the overage
+                    if (monthRemaining < 0) {
+                        overage = Math.abs(monthRemaining);
+                    } else {
+                        // If this month didn't go over, reduce overage by the amount under budget
+                        // But overage can't go negative (can't have "negative debt")
+                        overage = Math.max(0, overage - monthRemaining);
+                    }
+                }
+                
+                cumulativeOverage[category] = overage;
+            });
+            
+            const budgetKeys = Object.keys(budgets);
+            container.innerHTML = budgetKeys.map((category, index) => {
+                const budget = budgets[category];
+                const currentMonthSpent = monthSpending[category] || 0;
+                const rollover = cumulativeOverage[category] || 0;
+                const totalSpent = currentMonthSpent + rollover;
+                const remaining = budget.amount - totalSpent;
+                const percentage = budget.amount > 0 ? (totalSpent / budget.amount) * 100 : 0;
+                const isLast = index === budgetKeys.length - 1;
+                
+                return `
+                    <div class="stat-card" style="cursor: pointer; margin-bottom: ${isLast ? '0' : '10px'};" onclick="openBudgetEditModal('${category}')">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 400;">${category}</span>
+                            <span style="font-size: 0.9rem;">${remaining < 0 ? '-' : ''}$${Math.abs(remaining).toFixed(2)} / $${budget.amount.toFixed(2)}</span>
+                        </div>
+                        <div style="width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; position: relative;">
+                            <div style="width: ${Math.min(100, percentage)}%; height: 100%; background: #000; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        let currentEditingCategory = null;
+        
+        function openBudgetEditModal(category) {
+            currentEditingCategory = category;
+            const budget = budgets[category];
+            const modal = document.getElementById('budget-edit-modal');
+            if (modal) {
+                const nameInput = document.getElementById('budget-name-input');
+                const amountInput = document.getElementById('budget-amount-input');
+                if (nameInput) nameInput.value = category;
+                if (amountInput) amountInput.value = budget.amount;
+                modal.classList.add('open');
+            }
+        }
+        
+        function closeBudgetEditModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('budget-edit-modal');
+            if (modal) {
+                modal.classList.remove('open');
+                currentEditingCategory = null;
+            }
+        }
+        
+        function saveBudgetEdit() {
+            if (!currentEditingCategory) return;
+            
+            const nameInput = document.getElementById('budget-name-input');
+            const amountInput = document.getElementById('budget-amount-input');
+            
+            if (!nameInput || !amountInput) return;
+            
+            const newName = nameInput.value.trim().toLowerCase();
+            const newAmount = parseFloat(amountInput.value);
+            
+            if (!newName) {
+                alert('Please enter a category name');
+                return;
+            }
+            
+            if (!newAmount || newAmount <= 0) {
+                alert('Please enter a valid budget amount');
+                return;
+            }
+            
+            // If name changed, update the key
+            if (newName !== currentEditingCategory) {
+                const oldBudget = budgets[currentEditingCategory];
+                budgets[newName] = {
+                    amount: newAmount,
+                    spent: oldBudget.spent
+                };
+                delete budgets[currentEditingCategory];
+                
+                // Update all transactions with this category
+                transactions.forEach(t => {
+                    if (t.category === currentEditingCategory) {
+                        t.category = newName;
+                    }
+                });
+            } else {
+                // Just update the amount
+                budgets[currentEditingCategory].amount = newAmount;
+            }
+            
+            saveData();
+            renderBudgets();
+            renderTransactions();
+            closeBudgetEditModal();
+        }
+        
+        function openDeleteBudgetModal() {
+            if (!currentEditingCategory) return;
+            // Close the edit modal first
+            const editModal = document.getElementById('budget-edit-modal');
+            if (editModal) {
+                editModal.classList.remove('open');
+            }
+            // Open delete modal immediately
+            const modal = document.getElementById('delete-budget-modal');
+            if (modal) {
+                modal.classList.add('open');
+            }
+        }
+        
+        function closeDeleteBudgetModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('delete-budget-modal');
+            if (modal) {
+                modal.classList.remove('open');
+            }
+        }
+        
+        function confirmDeleteBudgetCategory() {
+            if (!currentEditingCategory) return;
+            
+            delete budgets[currentEditingCategory];
+            
+            // Remove category from transactions
+            transactions.forEach(t => {
+                if (t.category === currentEditingCategory) {
+                    t.category = null;
+                }
+            });
+            
+            saveData();
+            renderBudgets();
+            renderTransactions();
+            closeDeleteBudgetModal();
+            closeBudgetEditModal();
+        }
+        
+        function addBudgetCategory() {
+            const modal = document.getElementById('add-budget-modal');
+            if (modal) {
+                modal.classList.add('open');
+                const nameInput = document.getElementById('new-budget-name-input');
+                if (nameInput) {
+                    setTimeout(() => {
+                        nameInput.focus();
+                    }, 100);
+                }
+            }
+        }
+        
+        function closeAddBudgetModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('add-budget-modal');
+            if (modal) {
+                modal.classList.remove('open');
+                const nameInput = document.getElementById('new-budget-name-input');
+                const amountInput = document.getElementById('new-budget-amount-input');
+                if (nameInput) nameInput.value = '';
+                if (amountInput) amountInput.value = '';
+            }
+        }
+        
+        function confirmAddBudget() {
+            const nameInput = document.getElementById('new-budget-name-input');
+            const amountInput = document.getElementById('new-budget-amount-input');
+            
+            if (!nameInput || !amountInput) return;
+            
+            const categoryName = nameInput.value.trim();
+            const budgetAmount = parseFloat(amountInput.value);
+            
+            if (!categoryName) {
+                alert('Please enter a category name');
+                return;
+            }
+            
+            if (!budgetAmount || budgetAmount <= 0) {
+                alert('Please enter a valid budget amount');
+                return;
+            }
+            
+            const category = categoryName.toLowerCase();
+            
+            budgets[category] = {
+                amount: budgetAmount,
+                spent: 0
+            };
+            
+            saveData();
+            renderBudgets();
+            closeAddBudgetModal();
+        }
+
+        function initializeBalanceDropdowns() {
+            // Get current month and year
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            // Always set to current month and year
+            selectedBalanceMonth = currentMonth;
+            selectedBalanceYear = currentYear;
+            
+            // Update display
+            updateBalanceMonthYearDisplay();
+            
+            // Render transactions after initialization
+            renderTransactions();
+        }
+        
+        function updateBalanceMonthYearDisplay() {
+            const display = document.getElementById('balance-month-year-display');
+            if (!display) return;
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const month = selectedBalanceMonth !== null ? selectedBalanceMonth : new Date().getMonth();
+            const year = selectedBalanceYear !== null ? selectedBalanceYear : new Date().getFullYear();
+            
+            const span = display.querySelector('span');
+            if (span) {
+                span.textContent = `${monthNames[month]} ${year}`;
+            } else {
+                display.textContent = `${monthNames[month]} ${year}`;
+            }
+        }
+        
+        function openBalanceDateModal() {
+            const modal = document.getElementById('balance-date-modal');
+            const monthSelect = document.getElementById('balance-month-select-modal');
+            const yearSelect = document.getElementById('balance-year-select-modal');
+            
+            if (!modal || !monthSelect || !yearSelect) return;
+            
+            // Get current month and year
+            const now = new Date();
+            const currentMonth = selectedBalanceMonth !== null ? selectedBalanceMonth : now.getMonth();
+            const currentYear = selectedBalanceYear !== null ? selectedBalanceYear : now.getFullYear();
+            
+            // Set current values
+            monthSelect.value = currentMonth;
+            
+            // Populate years (current year - 5 to current year + 1)
+            yearSelect.innerHTML = '';
+            for (let year = currentYear - 5; year <= currentYear + 1; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+            
+            yearSelect.value = currentYear;
+            
+            modal.classList.add('open');
+        }
+        
+        function closeBalanceDateModal(event) {
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+            const modal = document.getElementById('balance-date-modal');
+            if (modal) {
+                modal.classList.remove('open');
+            }
+        }
+        
+        function confirmBalanceDateSelection() {
+            const monthSelect = document.getElementById('balance-month-select-modal');
+            const yearSelect = document.getElementById('balance-year-select-modal');
+            
+            if (!monthSelect || !yearSelect) return;
+            
+            selectedBalanceMonth = parseInt(monthSelect.value);
+            selectedBalanceYear = parseInt(yearSelect.value);
+            
+            updateBalanceMonthYearDisplay();
+            checkAndResetBudgetsForSelectedMonth();
+            updateBalance();
+            renderTransactions();
+            renderBudgets();
+            
+            closeBalanceDateModal();
+        }
+        
         function updateBalance() {
-            const totalIncome = transactions
+            // Get selected month/year from variables, or use current month/year
+            const now = new Date();
+            const month = selectedBalanceMonth !== null ? selectedBalanceMonth : now.getMonth();
+            const year = selectedBalanceYear !== null ? selectedBalanceYear : now.getFullYear();
+            
+            // Filter transactions by selected month/year
+            const filteredTransactions = transactions.filter(t => {
+                if (!t.date) return false;
+                const transactionDate = new Date(t.date);
+                return transactionDate.getMonth() === month && transactionDate.getFullYear() === year;
+            });
+            
+            const totalIncome = filteredTransactions
                 .filter(t => t.type === 'income')
                 .reduce((sum, t) => sum + t.amount, 0);
 
-            const totalExpenses = transactions
+            const totalExpenses = filteredTransactions
                 .filter(t => t.type === 'expense')
                 .reduce((sum, t) => sum + t.amount, 0);
 
             const balance = totalIncome - totalExpenses;
 
-            document.getElementById('balance').textContent = `$${balance.toFixed(2)}`;
+            const formattedBalance = balance < 0 ? `-$${Math.abs(balance).toFixed(2)}` : `$${balance.toFixed(2)}`;
+            const balanceElement = document.getElementById('balance');
+            const span = balanceElement.querySelector('span');
+            if (span) {
+                span.textContent = formattedBalance;
+            } else {
+                balanceElement.textContent = formattedBalance;
+            }
             document.getElementById('total-income').textContent = `$${totalIncome.toFixed(2)}`;
             document.getElementById('total-expenses').textContent = `$${totalExpenses.toFixed(2)}`;
         }
@@ -1940,7 +2678,19 @@
         function renderTransactions() {
             const container = document.getElementById('transactions-list');
             
-            if (transactions.length === 0) {
+            // Get selected month/year from variables, or use current month/year
+            const now = new Date();
+            const month = selectedBalanceMonth !== null ? selectedBalanceMonth : now.getMonth();
+            const year = selectedBalanceYear !== null ? selectedBalanceYear : now.getFullYear();
+            
+            // Filter transactions to show selected month/year
+            const currentMonthTransactions = transactions.filter(t => {
+                if (!t.date) return false;
+                const transactionDate = new Date(t.date);
+                return transactionDate.getMonth() === month && transactionDate.getFullYear() === year;
+            });
+            
+            if (currentMonthTransactions.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <p>no transactions yet</p>
@@ -1950,7 +2700,7 @@
             }
 
             // Sort by date (newest first)
-            const sortedTransactions = [...transactions].sort((a, b) => 
+            const sortedTransactions = [...currentMonthTransactions].sort((a, b) => 
                 new Date(b.date) - new Date(a.date)
             );
 
@@ -1965,14 +2715,19 @@
                 return `
                     <div class="transaction-item">
                         <div class="transaction-info">
-                            <div class="transaction-amount ${transaction.type}">
+                            <div class="transaction-amount">
                                 ${transaction.type === 'income' ? '+' : '-'}$${transaction.amount.toFixed(2)}
                             </div>
                             <div class="transaction-details">
                                 ${transaction.description} • ${formattedDate}
                             </div>
                         </div>
-                        <button class="btn btn-danger btn-small" onclick="deleteTransaction(${transaction.id})">Delete</button>
+                        <button class="transaction-delete-btn" onclick="openDeleteTransactionModal(${transaction.id})">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
                     </div>
                 `;
             }).join('');
@@ -2260,7 +3015,19 @@
             const savedContent = document.getElementById('saved-weeks-content');
             
             if (currentCalorieView === 'weekly') {
-                if (title) title.textContent = 'weekly log';
+                if (title) {
+                    // Preserve the arrow icon, only update the text
+                    const svg = title.querySelector('svg');
+                    if (svg) {
+                        // Remove all text nodes
+                        const textNodes = Array.from(title.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
+                        textNodes.forEach(node => node.remove());
+                        // Add text after SVG
+                        title.appendChild(document.createTextNode('weekly log'));
+                    } else {
+                        title.textContent = 'weekly log';
+                    }
+                }
                 if (toggleBtn) {
                     toggleBtn.textContent = 'saved';
                     toggleBtn.style.display = 'block';
@@ -2268,7 +3035,19 @@
                 if (weeklyContent) weeklyContent.style.display = 'block';
                 if (savedContent) savedContent.style.display = 'none';
             } else {
-                if (title) title.textContent = 'saved';
+                if (title) {
+                    // Preserve the arrow icon, only update the text
+                    const svg = title.querySelector('svg');
+                    if (svg) {
+                        // Remove all text nodes
+                        const textNodes = Array.from(title.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
+                        textNodes.forEach(node => node.remove());
+                        // Add text after SVG
+                        title.appendChild(document.createTextNode('saved'));
+                    } else {
+                        title.textContent = 'saved';
+                    }
+                }
                 if (toggleBtn) {
                     toggleBtn.textContent = 'weekly log';
                     toggleBtn.style.display = 'block';
