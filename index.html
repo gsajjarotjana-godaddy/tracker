@@ -3547,8 +3547,54 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Remove any JavaScript that might interfere with button positioning
-        // Let CSS handle it completely
+        // Ensure button position is consistent across all tabs
+        const floatingBtn = document.querySelector('.floating-add-btn');
+        if (floatingBtn) {
+            // Store the correct bottom position (from money/calories tabs where it works)
+            let correctBottomPosition = null;
+            
+            const setButtonPosition = () => {
+                // Use viewport height to calculate consistent position
+                const viewportHeight = window.innerHeight;
+                const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
+                const bottomValue = 20 + safeAreaBottom;
+                
+                // Set the position explicitly
+                floatingBtn.style.bottom = `${bottomValue}px`;
+                floatingBtn.style.right = window.innerWidth <= 600 ? '20px' : 'calc(50% - 125px)';
+                
+                // Store the correct position after first calculation
+                if (correctBottomPosition === null) {
+                    correctBottomPosition = bottomValue;
+                }
+            };
+            
+            // Set position immediately and after delays
+            setButtonPosition();
+            setTimeout(setButtonPosition, 50);
+            setTimeout(setButtonPosition, 200);
+            setTimeout(setButtonPosition, 500);
+            
+            // Override switchTab to ensure position is set when switching tabs
+            const originalSwitchTab = window.switchTab;
+            if (originalSwitchTab) {
+                window.switchTab = function(...args) {
+                    const result = originalSwitchTab.apply(this, args);
+                    setTimeout(setButtonPosition, 10);
+                    setTimeout(setButtonPosition, 100);
+                    return result;
+                };
+            }
+            
+            // Also set on resize
+            window.addEventListener('resize', setButtonPosition);
+            
+            // Use IntersectionObserver to detect when button position might have changed
+            const observer = new IntersectionObserver(() => {
+                setButtonPosition();
+            }, { root: null, rootMargin: '0px', threshold: 0 });
+            observer.observe(floatingBtn);
+        }
         
         setTimeout(() => {
             updateProgressArch();
