@@ -3551,88 +3551,131 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Lock button position to prevent movement after initial load
+        // Lock button position - capture from money/calories tabs and apply to all
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
-            // Capture the initial correct position immediately
             let lockedBottomValue = null;
             let lockedRightValue = 20;
             
-            const captureAndLockPosition = () => {
-                // Get safe area bottom
-                let safeAreaBottom = 0;
-                try {
-                    if (window.visualViewport) {
-                        safeAreaBottom = window.innerHeight - window.visualViewport.height;
-                    }
-                    if (safeAreaBottom === 0) {
-                        const testDiv = document.createElement('div');
-                        testDiv.style.cssText = 'position: absolute; visibility: hidden; padding-bottom: env(safe-area-inset-bottom);';
-                        document.body.appendChild(testDiv);
-                        const computed = getComputedStyle(testDiv);
-                        const padding = computed.paddingBottom;
-                        document.body.removeChild(testDiv);
-                        if (padding && padding !== '0px' && padding !== 'auto') {
-                            safeAreaBottom = parseFloat(padding) || 0;
+            const captureCorrectPosition = () => {
+                // Only capture when on money or calories tab (where position is correct)
+                if (currentTab === 'money' || currentTab === 'calories') {
+                    // Wait for layout to settle, then measure actual position
+                    setTimeout(() => {
+                        const rect = floatingBtn.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const bottomDistance = viewportHeight - rect.bottom;
+                        
+                        // Only capture if we got a valid value (should be around 20-70px)
+                        if (bottomDistance > 10 && bottomDistance < 200) {
+                            lockedBottomValue = bottomDistance;
+                            // Apply immediately after capturing
+                            applyLockedPosition();
                         }
-                    }
-                } catch (e) {
-                    safeAreaBottom = 0;
+                    }, 100);
                 }
-                
-                // Calculate position: 20px from bottom + safe area
-                const bottomPx = 20 + safeAreaBottom;
-                
-                // Lock the position if not already locked
-                if (lockedBottomValue === null) {
-                    lockedBottomValue = bottomPx;
-                }
-                
-                // Always apply the locked position
-                floatingBtn.style.cssText = `
-                    position: fixed !important;
-                    bottom: ${lockedBottomValue}px !important;
-                    right: ${lockedRightValue}px !important;
-                    top: auto !important;
-                    left: auto !important;
-                    width: 50px !important;
-                    height: 50px !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    border-radius: 50% !important;
-                    background: #000000 !important;
-                    border: none !important;
-                    color: white !important;
-                    font-size: 1.5rem !important;
-                    line-height: 1 !important;
-                    cursor: pointer !important;
-                    z-index: 1001 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    transition: transform 0.3s !important;
-                    transform: translateZ(0) !important;
-                `;
             };
             
-            // Capture position immediately on load
-            captureAndLockPosition();
+            const applyLockedPosition = () => {
+                if (lockedBottomValue !== null) {
+                    // Apply the locked position (exact pixel value from money/calories tabs)
+                    floatingBtn.style.cssText = `
+                        position: fixed !important;
+                        bottom: ${lockedBottomValue}px !important;
+                        right: ${lockedRightValue}px !important;
+                        top: auto !important;
+                        left: auto !important;
+                        width: 50px !important;
+                        height: 50px !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        border-radius: 50% !important;
+                        background: #000000 !important;
+                        border: none !important;
+                        color: white !important;
+                        font-size: 1.5rem !important;
+                        line-height: 1 !important;
+                        cursor: pointer !important;
+                        z-index: 1001 !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        transition: transform 0.3s !important;
+                        transform: translateZ(0) !important;
+                    `;
+                } else {
+                    // If not locked yet, calculate from safe area (fallback)
+                    let safeAreaBottom = 0;
+                    try {
+                        if (window.visualViewport) {
+                            safeAreaBottom = window.innerHeight - window.visualViewport.height;
+                        }
+                        if (safeAreaBottom === 0) {
+                            const testDiv = document.createElement('div');
+                            testDiv.style.cssText = 'position: absolute; visibility: hidden; padding-bottom: env(safe-area-inset-bottom);';
+                            document.body.appendChild(testDiv);
+                            const computed = getComputedStyle(testDiv);
+                            const padding = computed.paddingBottom;
+                            document.body.removeChild(testDiv);
+                            if (padding && padding !== '0px' && padding !== 'auto') {
+                                safeAreaBottom = parseFloat(padding) || 0;
+                            }
+                        }
+                    } catch (e) {
+                        safeAreaBottom = 0;
+                    }
+                    const bottomPx = 20 + safeAreaBottom;
+                    floatingBtn.style.setProperty('bottom', `${bottomPx}px`, 'important');
+                    floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
+                    floatingBtn.style.setProperty('position', 'fixed', 'important');
+                }
+            };
+            
+            // If starting on habits tab, temporarily switch to money to capture position
+            if (currentTab === 'habits') {
+                // Temporarily show money tab to capture button position
+                const moneyTabContent = document.getElementById('money-tab');
+                const habitsTabContent = document.getElementById('habits-tab');
+                if (moneyTabContent && habitsTabContent) {
+                    // Show money tab temporarily
+                    moneyTabContent.style.display = 'block';
+                    habitsTabContent.style.display = 'none';
+                    
+                    // Capture position from money tab
+                    setTimeout(() => {
+                        const rect = floatingBtn.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const bottomDistance = viewportHeight - rect.bottom;
+                        
+                        if (bottomDistance > 10 && bottomDistance < 200) {
+                            lockedBottomValue = bottomDistance;
+                        }
+                        
+                        // Restore habits tab
+                        moneyTabContent.style.display = 'none';
+                        habitsTabContent.style.display = 'block';
+                        
+                        // Apply the captured position
+                        applyLockedPosition();
+                    }, 150);
+                }
+            } else if (currentTab === 'money' || currentTab === 'calories') {
+                // Capture position if already on money/calories tab
+                captureCorrectPosition();
+            }
+            
+            // Apply position immediately
+            applyLockedPosition();
             
             // Lock position before updateProgressArch runs
             const originalUpdateProgressArch = window.updateProgressArch;
             if (originalUpdateProgressArch) {
                 window.updateProgressArch = function(...args) {
-                    // Lock position before DOM manipulation
-                    if (lockedBottomValue !== null) {
-                        floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
-                        floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
-                    }
+                    applyLockedPosition();
                     const result = originalUpdateProgressArch.apply(this, args);
-                    // Lock position after DOM manipulation
-                    if (lockedBottomValue !== null) {
-                        floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
-                        floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
-                    }
+                    applyLockedPosition();
+                    setTimeout(applyLockedPosition, 0);
+                    setTimeout(applyLockedPosition, 50);
                     return result;
                 };
             }
@@ -3641,32 +3684,22 @@
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
-                    if (lockedBottomValue !== null) {
-                        floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
-                        floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
-                    }
+                    applyLockedPosition();
                     const result = originalSwitchTab.apply(this, args);
-                    if (lockedBottomValue !== null) {
-                        floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
-                        floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
-                    }
-                    setTimeout(() => {
-                        if (lockedBottomValue !== null) {
-                            floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
-                            floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
-                        }
-                    }, 0);
+                    // Try to capture position if on money/calories (to update locked value)
+                    captureCorrectPosition();
+                    // Apply position after switch
+                    applyLockedPosition();
+                    setTimeout(applyLockedPosition, 0);
+                    setTimeout(applyLockedPosition, 50);
+                    setTimeout(applyLockedPosition, 100);
+                    setTimeout(applyLockedPosition, 200);
                     return result;
                 };
             }
             
-            // Continuously lock position to prevent any movement
-            setInterval(() => {
-                if (lockedBottomValue !== null) {
-                    floatingBtn.style.setProperty('bottom', `${lockedBottomValue}px`, 'important');
-                    floatingBtn.style.setProperty('right', `${lockedRightValue}px`, 'important');
-                }
-            }, 50);
+            // Continuously apply position to prevent movement
+            setInterval(applyLockedPosition, 50);
         }
         
         setTimeout(() => {
