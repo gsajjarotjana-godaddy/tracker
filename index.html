@@ -454,28 +454,35 @@
 
         .floating-add-btn {
             position: fixed !important;
-            bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
-            right: calc(50% - 125px);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #000000;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            line-height: 1;
-            cursor: pointer;
-            z-index: 1001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            bottom: 20px !important;
+            right: calc(50% - 125px) !important;
+            width: 50px !important;
+            height: 50px !important;
+            border-radius: 50% !important;
+            background: #000000 !important;
+            border: none !important;
+            color: white !important;
+            font-size: 1.5rem !important;
+            line-height: 1 !important;
+            cursor: pointer !important;
+            z-index: 1001 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             transition: transform 0.3s !important;
             transform: translateZ(0) !important;
             margin: 0 !important;
             padding: 0 !important;
             top: auto !important;
             left: auto !important;
-            will-change: transform;
+            will-change: transform !important;
+            box-sizing: border-box !important;
+        }
+        
+        @supports (padding: max(0px)) {
+            .floating-add-btn {
+                bottom: max(20px, calc(20px + env(safe-area-inset-bottom))) !important;
+            }
         }
         
         @media (max-width: 600px) {
@@ -3550,30 +3557,51 @@
         // Initialize calorie view
         updateCalorieViewDisplay();
         
-        // Fix button position after layout settles to prevent shift
+        // Fix button position to be consistent across all tabs
         const floatingBtn = document.querySelector('.floating-add-btn');
         if (floatingBtn) {
-            // Force consistent position using CSS calc - don't override with inline styles
-            // The CSS should handle it, but we'll ensure it's applied correctly
-            const ensureButtonPosition = () => {
-                // Remove any inline bottom style to let CSS handle it
-                floatingBtn.style.removeProperty('bottom');
-                // Force a reflow to ensure CSS is applied
-                void floatingBtn.offsetHeight;
+            // Get the computed safe area inset
+            const getSafeAreaBottom = () => {
+                // Try to get safe area from CSS custom property or default to 0
+                const testEl = document.createElement('div');
+                testEl.style.paddingBottom = 'env(safe-area-inset-bottom)';
+                testEl.style.position = 'absolute';
+                testEl.style.visibility = 'hidden';
+                document.body.appendChild(testEl);
+                const computed = window.getComputedStyle(testEl);
+                const padding = computed.paddingBottom;
+                document.body.removeChild(testEl);
+                // If we can't get it, default to 0
+                return padding && padding !== '0px' ? parseFloat(padding) : 0;
             };
             
-            // Ensure position is correct after layout
-            setTimeout(ensureButtonPosition, 100);
-            setTimeout(ensureButtonPosition, 300);
+            const setConsistentPosition = () => {
+                const safeArea = getSafeAreaBottom();
+                const bottomValue = 20 + safeArea;
+                floatingBtn.style.setProperty('bottom', `${bottomValue}px`, 'important');
+            };
             
-            // Also ensure position when switching tabs
+            // Set position immediately
+            setConsistentPosition();
+            
+            // Set position after layout settles
+            setTimeout(setConsistentPosition, 50);
+            setTimeout(setConsistentPosition, 200);
+            setTimeout(setConsistentPosition, 500);
+            
+            // Set position when switching tabs
             const originalSwitchTab = window.switchTab;
             if (originalSwitchTab) {
                 window.switchTab = function(...args) {
-                    originalSwitchTab.apply(this, args);
-                    setTimeout(ensureButtonPosition, 50);
+                    const result = originalSwitchTab.apply(this, args);
+                    setTimeout(setConsistentPosition, 10);
+                    setTimeout(setConsistentPosition, 100);
+                    return result;
                 };
             }
+            
+            // Also set on window resize
+            window.addEventListener('resize', setConsistentPosition);
         }
         
         setTimeout(() => {
